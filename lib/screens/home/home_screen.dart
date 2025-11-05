@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ebookreader/services/book_service.dart';
 import 'package:ebookreader/screens/book/book_detail_screen.dart';
+import 'package:ebookreader/constants/api_constants.dart';
 
 class HomeScreen extends StatefulWidget {
   final String token;
@@ -112,15 +113,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       ),
     );
-  }
-
-  String _getCoverPath(Map<String, dynamic> book) {
-    final coverUrl = book['coverUrl'];
-    if (coverUrl != null && coverUrl.isNotEmpty) {
-      final fileName = coverUrl.split('/').last;
-      return 'assets/covers/$fileName';
-    }
-    return 'assets/covers/book_${book['id']}.jpg';
   }
 
   @override
@@ -390,12 +382,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(24),
                     ),
-                    child: Image.asset(
-                      _getCoverPath(book),
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildPlaceholder(),
-                    ),
+                    child: book['coverUrl'] != null && book['coverUrl'].toString().isNotEmpty
+                        ? Image.network(
+                            ApiConstants.getCoverUrl(book['coverUrl']),
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: Colors.white.withValues(alpha: 0.03),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded / 
+                                          loadingProgress.expectedTotalBytes!
+                                        : null,
+                                    color: const Color(0xFF14FFEC),
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              print('❌ Ошибка загрузки обложки: $error');
+                              print('📍 URL: ${ApiConstants.getCoverUrl(book['coverUrl'])}');
+                              return _buildPlaceholder();
+                            },
+                          )
+                        : _buildPlaceholder(),
                   ),
                 ),
               ),

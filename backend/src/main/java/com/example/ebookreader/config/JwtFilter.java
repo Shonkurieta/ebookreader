@@ -18,7 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
-
+    
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
 
@@ -32,7 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-
+        
         String path = request.getRequestURI();
         
         System.out.println("\n═══════════════════════════════════════");
@@ -41,17 +41,23 @@ public class JwtFilter extends OncePerRequestFilter {
         System.out.println("URI: " + path);
         System.out.println("Method: " + request.getMethod());
         
-        // 🔹 Пропускаем JWT фильтр для публичных эндпоинтов
-        if (path.startsWith("/api/auth/") || path.startsWith("/api/books") || path.startsWith("/api/genres")) {
-            System.out.println("✅ Публичный эндпоинт - пропуск JWT фильтра");
+        // 🔹 Пропускаем JWT фильтр для публичных эндпоинтов и статических файлов
+        if (path.startsWith("/api/auth/") || 
+            path.startsWith("/api/books") || 
+            path.startsWith("/api/genres") ||
+            path.startsWith("/api/test/") ||
+            path.startsWith("/covers/") ||           // ← ДОБАВЛЕНО
+            path.startsWith("/assets/")) {           // ← ДОБАВЛЕНО
+            
+            System.out.println("✅ Публичный ресурс - пропуск JWT фильтра");
             System.out.println("═══════════════════════════════════════\n");
             filterChain.doFilter(request, response);
             return;
         }
-
+        
         final String authHeader = request.getHeader("Authorization");
         System.out.println("Authorization header: " + (authHeader != null ? authHeader.substring(0, Math.min(30, authHeader.length())) + "..." : "NULL"));
-
+        
         // 🔹 Если нет заголовка Authorization
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             System.out.println("⚠️ Нет валидного Authorization заголовка");
@@ -59,7 +65,7 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
+        
         try {
             final String jwtToken = authHeader.substring(7);
             System.out.println("Token extracted (first 20 chars): " + jwtToken.substring(0, Math.min(20, jwtToken.length())) + "...");
@@ -67,7 +73,7 @@ public class JwtFilter extends OncePerRequestFilter {
             // ✅ ИЗМЕНЕНО: Извлекаем userId вместо nickname
             final Long userId = jwtUtil.extractUserId(jwtToken);
             System.out.println("User ID from token: " + userId);
-
+            
             if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 System.out.println("🔍 Loading user details for ID: " + userId);
                 
@@ -80,12 +86,12 @@ public class JwtFilter extends OncePerRequestFilter {
                 System.out.println("   Account non-locked: " + userDetails.isAccountNonLocked());
                 System.out.println("   Credentials non-expired: " + userDetails.isCredentialsNonExpired());
                 System.out.println("   Enabled: " + userDetails.isEnabled());
-
+                
                 // ✅ ИЗМЕНЕНО: Проверка токена по userId
                 System.out.println("🔍 Validating token...");
                 if (jwtUtil.isTokenValid(jwtToken, userId)) {
                     System.out.println("✅ Token is VALID");
-
+                    
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
@@ -94,7 +100,7 @@ public class JwtFilter extends OncePerRequestFilter {
                             );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-
+                    
                     System.out.println("✅ Authentication set in SecurityContext");
                     System.out.println("   Principal: " + userDetails.getUsername());
                     System.out.println("   Authorities: " + authToken.getAuthorities());
@@ -114,7 +120,7 @@ public class JwtFilter extends OncePerRequestFilter {
             System.err.println("   Message: " + e.getMessage());
             e.printStackTrace();
         }
-
+        
         System.out.println("═══════════════════════════════════════\n");
         filterChain.doFilter(request, response);
     }

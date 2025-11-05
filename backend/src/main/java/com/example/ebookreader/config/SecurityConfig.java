@@ -16,7 +16,7 @@ import org.springframework.web.cors.CorsConfiguration;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
+    
     private final JwtFilter jwtFilter;
 
     public SecurityConfig(JwtFilter jwtFilter) {
@@ -44,9 +44,14 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // ✅ Публичные эндпоинты (доступны БЕЗ авторизации)
                 .requestMatchers("/api/auth/**").permitAll()        // Регистрация, логин, refresh
-                .requestMatchers("/api/books/**").permitAll()       // ✅ ИЗМЕНЕНО: Книги доступны всем
+                .requestMatchers("/api/books/**").permitAll()       // Книги доступны всем
                 .requestMatchers("/api/genres/**").permitAll()      // Жанры доступны всем
-                .requestMatchers("/api/test/**").permitAll()        // ✅ Тестовые эндпоинты
+                .requestMatchers("/api/test/**").permitAll()        // Тестовые эндпоинты
+                
+                // ✅ СТАТИЧЕСКИЕ ФАЙЛЫ - обложки книг (БЕЗ авторизации)
+                .requestMatchers("/covers/**").permitAll()          // Обложки через /covers/
+                .requestMatchers("/assets/**").permitAll()          // Обложки через /assets/
+                .requestMatchers("/assets/covers/**").permitAll()   // Обложки через /assets/covers/
                 
                 // ✅ Защищенные эндпоинты
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Только админ
@@ -56,7 +61,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
+        
         return http.build();
     }
 }

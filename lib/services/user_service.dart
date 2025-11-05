@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class UserService {
-  final String baseUrl = 'http://10.101.124.182:8080/api';
+  final String baseUrl = 'http://192.168.10.5:8080/api';
 
   // ========================================
   // ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ

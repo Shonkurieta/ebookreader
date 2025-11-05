@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class BookService {
-  final String baseUrl = 'http://10.101.124.182:8080/api';
+  final String baseUrl = 'http://192.168.10.5:8080/api';
 
   // Получить все книги
   Future<List<dynamic>> getAllBooks(String token) async {

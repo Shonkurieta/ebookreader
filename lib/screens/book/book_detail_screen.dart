@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ebookreader/services/book_service.dart';
 import 'package:ebookreader/services/bookmark_service.dart';
 import 'package:ebookreader/screens/reader/reader_screen.dart';
+import 'package:ebookreader/constants/api_constants.dart';
 
 class BookDetailScreen extends StatefulWidget {
   final String token;
@@ -152,15 +153,6 @@ class _BookDetailScreenState extends State<BookDetailScreen>
     ).then((_) => _loadBookDetails());
   }
 
-  String _getCoverPath() {
-    final coverUrl = _book!['coverUrl'];
-    if (coverUrl != null && coverUrl.isNotEmpty) {
-      final fileName = coverUrl.split('/').last;
-      return 'assets/covers/$fileName';
-    }
-    return 'assets/covers/book_${widget.bookId}.jpg';
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -265,11 +257,29 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(24),
-                            child: Image.asset(
-                              _getCoverPath(),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _buildPlaceholder(),
-                            ),
+                            child: _book!['coverUrl'] != null && _book!['coverUrl'].toString().isNotEmpty
+                                ? Image.network(
+                                    ApiConstants.getCoverUrl(_book!['coverUrl']),
+                                    fit: BoxFit.cover,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        color: Colors.white.withValues(alpha: 0.03),
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            color: const Color(0xFF14FFEC),
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      print('❌ Ошибка загрузки обложки: $error');
+                                      print('📍 URL: ${ApiConstants.getCoverUrl(_book!['coverUrl'])}');
+                                      return _buildPlaceholder();
+                                    },
+                                  )
+                                : _buildPlaceholder(),
                           ),
                         ),
                       ),

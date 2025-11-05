@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class AuthService {
   // ВАЖНО: Убедитесь, что здесь только /api без дублирования
-  final String baseUrl = 'http://10.101.124.182:8080/api';
+  final String baseUrl = 'http://192.168.10.5:8080/api';
 
   Future<Map<String, dynamic>> register(
       String username, String email, String password) async {
