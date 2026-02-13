@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // ✅ КРИТИЧЕСКИ ВАЖНО: Полностью отключаем проверку безопасности для GraphQL
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+            .requestMatchers("/graphql/**", "/graphiql/**", "/favicon.ico");
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -42,33 +50,32 @@ public class SecurityConfig {
             }))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // ✅ Публичные эндпоинты (доступны БЕЗ авторизации)
-                .requestMatchers("/api/auth/**").permitAll()        // Регистрация, логин, refresh
-                .requestMatchers("/api/books/**").permitAll()       // Книги доступны всем
-                .requestMatchers("/api/genres/**").permitAll()      // Жанры доступны всем
-                .requestMatchers("/api/test/**").permitAll()        // Тестовые эндпоинты
+                // ✅ Публичные эндпоинты
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/books/**").permitAll()
+                .requestMatchers("/api/genres/**").permitAll()
+                .requestMatchers("/api/test/**").permitAll()
                 
-                // ✅ СТАТИЧЕСКИЕ ФАЙЛЫ - обложки книг (БЕЗ авторизации)
-                .requestMatchers("/covers/**").permitAll()          // Обложки через /covers/
-                .requestMatchers("/assets/**").permitAll()          // Обложки через /assets/
-                .requestMatchers("/assets/covers/**").permitAll()   // Обложки через /assets/covers/
+                // ✅ Статические файлы
+                .requestMatchers("/covers/**").permitAll()
+                .requestMatchers("/assets/**").permitAll()
                 
-                // ✅ SWAGGER UI - документация API (БЕЗ авторизации)
-                .requestMatchers("/swagger-ui/**").permitAll()      // Swagger UI интерфейс
-                .requestMatchers("/v3/api-docs/**").permitAll()     // OpenAPI спецификация
-                .requestMatchers("/swagger-ui.html").permitAll()    // Главная страница Swagger
+                // ✅ Swagger UI
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
 
-                // ✅ GRAPHQL - эндпоинты (БЕЗ авторизации для тестирования)
-                .requestMatchers("/graphql/**").permitAll()         // API GraphQL
-                .requestMatchers("/graphiql/**").permitAll()        // Интерфейс GraphiQL
+                // ✅ GraphQL (уже игнорируется WebSecurityCustomizer, но оставляем для надежности)
+                .requestMatchers("/graphql/**").permitAll()
+                .requestMatchers("/graphiql/**").permitAll()
                 
                 // ✅ Защищенные эндпоинты
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Только админ
-                .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN") // Профиль, закладки
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                 
-                // Все остальное требует авторизации
                 .anyRequest().authenticated()
             )
+            // ✅ Оставляем только один фильтр (JwtFilter)
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();

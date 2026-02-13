@@ -10,9 +10,13 @@ spring:
     show-sql: true
 
   graphql:
+    path: /graphql
     graphiql:
       enabled: true
       path: /graphiql
+    schema:
+      introspection:
+        enabled: true
 
 server:
   port: 8080

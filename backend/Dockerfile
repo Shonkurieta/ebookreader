@@ -1,28 +1,20 @@
-# Используем официальный образ OpenJDK для сборки
-FROM openjdk:17-jdk-slim as builder
-
-# Устанавливаем рабочую директорию внутри контейнера
+# Этап 1: Сборка (используем Maven образ, так как в нем уже есть всё необходимое)
+FROM maven:3.8.5-openjdk-17 AS builder
 WORKDIR /app
-
-# Копируем Maven POM файл и исходный код
+# Копируем только pom.xml сначала, чтобы закешировать зависимости
 COPY pom.xml .
 COPY src ./src
+# Собираем JAR
+RUN mvn clean package -Dmaven.test.skip=true
 
-# Собираем приложение с помощью Maven. Флаг -Dmaven.test.skip=true пропускает тесты.
-# Это создаст исполняемый JAR-файл в target/
-RUN ./mvnw clean package -Dmaven.test.skip=true
-
-# Используем более легковесный образ JRE для запуска приложения
-FROM openjdk:17-jre-slim
-
-# Устанавливаем рабочую директорию
+# Этап 2: Запуск (используем актуальный и поддерживаемый образ Temurin)
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
+# Копируем JAR из этапа сборки (используем маску *, чтобы не зависеть от версии в названии)
+COPY --from=builder /app/target/*.jar ebookreader-backend.jar
 
-# Копируем собранный JAR-файл из предыдущего этапа сборки
-COPY --from=builder /app/target/ebookreader-backend-1.0.0.jar ebookreader-backend.jar
+# Создаем папку для ассетов, чтобы не было ошибок доступа
+RUN mkdir -p assets/covers
 
-# Открываем порт, на котором работает Spring Boot приложение
 EXPOSE 8080
-
-# Команда для запуска приложения
 ENTRYPOINT ["java", "-jar", "ebookreader-backend.jar"]

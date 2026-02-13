@@ -38,19 +38,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String path = request.getRequestURI();
             
-            System.out.println("🔒 [JwtAuthenticationFilter] Processing request:");
-            System.out.println("   URI: " + path);
-            System.out.println("   Method: " + request.getMethod());
-            
-            // ✅ ДОБАВЛЕНО: Пропускаем JWT проверку для публичных ресурсов
+            // ✅ ДОБАВЛЕНО: Пропускаем GraphQL, чтобы не мешать загрузке
             if (path.startsWith("/api/auth/") || 
                 path.startsWith("/api/books") || 
                 path.startsWith("/api/genres") ||
                 path.startsWith("/api/test/") ||
                 path.startsWith("/covers/") ||
-                path.startsWith("/assets/")) {
+                path.startsWith("/assets/") ||
+                path.startsWith("/graphql") ||   // ← ДОБАВЛЕНО
+                path.startsWith("/graphiql")) {  // ← ДОБАВЛЕНО
                 
-                System.out.println("   ✅ Public resource - skipping JWT check");
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -59,34 +56,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             final String jwt;
             final String username;
 
-            // Если нет заголовка Authorization или не Bearer
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                System.out.println("   ℹ️ No JWT token found, continuing chain");
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Извлекаем токен
             jwt = authHeader.substring(7);
-            System.out.println("   Token (first 30 chars): " + jwt.substring(0, Math.min(30, jwt.length())) + "...");
-
-            // Извлекаем username из токена
             username = jwtUtil.extractUsername(jwt);
-            System.out.println("   Username from token: " + username);
 
-            // Если username есть и пользователь еще не аутентифицирован
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                
-                // Загружаем UserDetails
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                System.out.println("   UserDetails loaded for: " + username);
-                System.out.println("   UserDetails authorities: " + userDetails.getAuthorities());
 
-                // Проверяем токен
                 if (jwtUtil.isTokenValid(jwt, userDetails)) {
-                    System.out.println("   ✅ Token is valid");
-
-                    // ВАЖНО: Извлекаем authorities из токена
                     String authoritiesString = jwtUtil.extractAuthorities(jwt);
                     List<SimpleGrantedAuthority> authorities;
                     
@@ -94,37 +75,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         authorities = Arrays.stream(authoritiesString.split(","))
                                 .map(SimpleGrantedAuthority::new)
                                 .collect(Collectors.toList());
-                        System.out.println("   🔑 Authorities from token: " + authorities);
                     } else {
-                        // Fallback на authorities из UserDetails
                         authorities = userDetails.getAuthorities().stream()
                                 .map(auth -> new SimpleGrantedAuthority(auth.getAuthority()))
                                 .collect(Collectors.toList());
-                        System.out.println("   🔑 Authorities from UserDetails: " + authorities);
                     }
 
-                    // Создаем authentication с authorities из токена
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
-                            authorities // ← Используем authorities из токена
+                            authorities
                     );
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    
-                    System.out.println("   ✅ Authentication set in SecurityContext");
-                    System.out.println("   Final authorities: " + authToken.getAuthorities());
-                } else {
-                    System.out.println("   ❌ Token is invalid");
                 }
             }
 
             filterChain.doFilter(request, response);
             
         } catch (Exception e) {
-            System.err.println("❌ [JwtAuthenticationFilter] Error: " + e.getMessage());
-            e.printStackTrace();
             filterChain.doFilter(request, response);
         }
     }

@@ -29,12 +29,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ebookreader
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 12345
-      # Другие переменные окружения, если нужны
     depends_on:
       db:
-        condition: service_healthy
-    # Если вы используете .env файл для Flutter, убедитесь, что API_BASE_URL указывает на localhost:8080
-    # При запуске через Docker Compose, backend будет доступен по localhost:8080 с хост-машины
+        condition: service_healthy  # ← Это заставит бэкенд ждать полной готовности БД
+    restart: always                # ← Если бэкенд упадет, он сам перезапустится
 
 volumes:
   db_data:
