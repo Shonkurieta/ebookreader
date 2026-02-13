@@ -57,6 +57,10 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**").permitAll()      // Swagger UI интерфейс
                 .requestMatchers("/v3/api-docs/**").permitAll()     // OpenAPI спецификация
                 .requestMatchers("/swagger-ui.html").permitAll()    // Главная страница Swagger
+
+                // ✅ GRAPHQL - эндпоинты (БЕЗ авторизации для тестирования)
+                .requestMatchers("/graphql/**").permitAll()         // API GraphQL
+                .requestMatchers("/graphiql/**").permitAll()        // Интерфейс GraphiQL
                 
                 // ✅ Защищенные эндпоинты
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Только админ

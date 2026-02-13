@@ -9,5 +9,10 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+
 server:
   port: 8080
