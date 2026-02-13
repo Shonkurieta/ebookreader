@@ -19,7 +19,7 @@
 
     <properties>
         <java.version>17</java.version>
-        <springdoc-openapi-ui.version>2.5.0</springdoc-openapi-ui.version> <!-- Добавлено -->
+        <springdoc-openapi-ui.version>2.5.0</springdoc-openapi-ui.version>
     </properties>
 
     <dependencies>
@@ -89,12 +89,31 @@
             <artifactId>spring-aspects</artifactId>
         </dependency>
 
-        <!-- Lombok (удобные геттеры/сеттеры) - если используете, раскомментируйте
+        <!-- WebSocket -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency> -->
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>sockjs-client</artifactId>
+            <version>1.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>stomp-websocket</artifactId>
+            <version>2.3.4</version>
+        </dependency>
+
+        <!-- GraphQL для Spring Boot 3 (Spring for GraphQL) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-graphql</artifactId>
+        </dependency>
 
         <!-- Тестовые зависимости -->
         <dependency>
@@ -105,6 +124,11 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.graphql</groupId>
+            <artifactId>spring-graphql-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -36,8 +36,8 @@ public class Chapter {
     public Book getBook() { return book; }
     public void setBook(Book book) { this.book = book; }
 
-    public Integer getchapterOrder() { return chapterOrder; }
-    public void setchapterOrder(Integer chapterOrder) { this.chapterOrder = chapterOrder; }
+    public Integer getChapterOrder() { return chapterOrder; }
+    public void setChapterOrder(Integer chapterOrder) { this.chapterOrder = chapterOrder; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }

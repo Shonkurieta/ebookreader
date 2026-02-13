@@ -59,7 +59,7 @@ public class BookServiceImpl implements BookService {
         return chapters.stream()
                 .map(ch -> new ChapterDTO(
                         ch.getId(),
-                        ch.getchapterOrder(),
+                        ch.getChapterOrder(),
                         ch.getTitle(),
                         null // Не отдаём контент в списке глав
                 ))
@@ -72,7 +72,7 @@ public class BookServiceImpl implements BookService {
         return chapterRepository.findByBookIdAndChapterOrder(bookId, chapterOrder)
                 .map(ch -> new ChapterDTO(
                         ch.getId(),
-                        ch.getchapterOrder(),
+                        ch.getChapterOrder(),
                         ch.getTitle(),
                         ch.getContent()
                 ));
