@@ -53,6 +53,11 @@ public class SecurityConfig {
                 .requestMatchers("/assets/**").permitAll()          // Обложки через /assets/
                 .requestMatchers("/assets/covers/**").permitAll()   // Обложки через /assets/covers/
                 
+                // ✅ SWAGGER UI - документация API (БЕЗ авторизации)
+                .requestMatchers("/swagger-ui/**").permitAll()      // Swagger UI интерфейс
+                .requestMatchers("/v3/api-docs/**").permitAll()     // OpenAPI спецификация
+                .requestMatchers("/swagger-ui.html").permitAll()    // Главная страница Swagger
+                
                 // ✅ Защищенные эндпоинты
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Только админ
                 .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN") // Профиль, закладки
