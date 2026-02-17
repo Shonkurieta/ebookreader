@@ -29,10 +29,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ebookreader
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 12345
+    volumes:
+      - ./backend/assets:/app/assets  # Сохраняем обложки на хосте
     depends_on:
       db:
-        condition: service_healthy  # ← Это заставит бэкенд ждать полной готовности БД
-    restart: always                # ← Если бэкенд упадет, он сам перезапустится
+        condition: service_healthy
+    restart: always
 
 volumes:
   db_data:

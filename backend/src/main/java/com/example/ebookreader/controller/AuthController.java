@@ -1,22 +1,14 @@
 package com.example.ebookreader.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid; // Импортируем @Valid
-
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,12 +19,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.ebookreader.config.JwtUtil;
+import com.example.ebookreader.dto.LoginRequest;
+import com.example.ebookreader.dto.RegisterRequest;
+import com.example.ebookreader.exception.BadRequestException;
+import com.example.ebookreader.exception.UnauthorizedException;
 import com.example.ebookreader.model.User;
 import com.example.ebookreader.repository.UserRepository;
-import com.example.ebookreader.dto.LoginRequest; // Импортируем DTO
-import com.example.ebookreader.dto.RegisterRequest; // Импортируем DTO
-import com.example.ebookreader.exception.BadRequestException; // Импортируем наше исключение
-import com.example.ebookreader.exception.UnauthorizedException; // Импортируем наше исключение
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -49,45 +45,43 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
     @Operation(summary = "Регистрация нового пользователя")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Успешная регистрация",
-                    content = @Content(schema = @Schema(implementation = Map.class))),
-            @ApiResponse(responseCode = "400", description = "Неверные входные данные",
-                    content = @Content(schema = @Schema(implementation = Map.class))),
-            @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера",
-                    content = @Content(schema = @Schema(implementation = Map.class)))
-    })
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) { // Используем @Valid и DTO
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         try {
-            if (userRepository.findByNickname(request.getUsername()).isPresent()) {
+            String username = request.getUsername().trim();
+            String email = request.getEmail().trim();
+
+            if (userRepository.findByNickname(username).isPresent()) {
                 throw new BadRequestException("Пользователь с таким именем уже существует");
             }
 
-            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            if (userRepository.findByEmail(email).isPresent()) {
                 throw new BadRequestException("Email уже используется");
             }
 
             User user = new User();
-            user.setNickname(request.getUsername());
-            user.setEmail(request.getEmail());
+            user.setNickname(username);
+            user.setEmail(email);
             user.setPassword(passwordEncoder.encode(request.getPassword()));
             user.setRole("USER");
 
             User savedUser = userRepository.save(user);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+            // Создаем UserDetails напрямую для генерации токена
+            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                    savedUser.getNickname(),
+                    savedUser.getPassword(),
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole()))
+            );
+
             String token = jwtUtil.generateToken(savedUser.getId(), userDetails);
 
             Map<String, String> response = new HashMap<>();
             response.put("token", token);
-            response.put("username", user.getNickname());
-            response.put("email", user.getEmail());
-            response.put("role", user.getRole());
+            response.put("username", savedUser.getNickname());
+            response.put("email", savedUser.getEmail());
+            response.put("role", savedUser.getRole());
 
             return ResponseEntity.ok(response);
             
@@ -100,37 +94,30 @@ public class AuthController {
     }
 
     @Operation(summary = "Вход пользователя в систему")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Успешный вход",
-                    content = @Content(schema = @Schema(implementation = Map.class))),
-            @ApiResponse(responseCode = "401", description = "Неверные учетные данные",
-                    content = @Content(schema = @Schema(implementation = Map.class))),
-            @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера",
-                    content = @Content(schema = @Schema(implementation = Map.class)))
-    })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) { // Используем @Valid и DTO
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
-            String login = request.getUsername();
+            String loginIdentifier = request.getUsername().trim();
             String password = request.getPassword();
 
-            Optional<User> userOpt = userRepository.findByNickname(login);
-            
-            if (userOpt.isEmpty()) {
-                userOpt = userRepository.findByEmail(login);
-            }
-            
-            if (userOpt.isEmpty()) {
-                throw new UnauthorizedException("Неверное имя пользователя или пароль");
-            }
+            // 1. Ищем пользователя по нику или почте
+            User user = userRepository.findByNickname(loginIdentifier)
+                    .orElseGet(() -> userRepository.findByEmail(loginIdentifier)
+                    .orElseThrow(() -> new UnauthorizedException("Неверное имя пользователя или пароль")));
 
-            User user = userOpt.get();
-
+            // 2. Проверяем пароль через BCrypt
             if (!passwordEncoder.matches(password, user.getPassword())) {
                 throw new UnauthorizedException("Неверное имя пользователя или пароль");
             }
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getNickname());
+            // 3. Создаем UserDetails вручную (без повторного запроса к БД)
+            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                    user.getNickname(),
+                    user.getPassword(),
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+            );
+
+            // 4. Генерируем токен
             String token = jwtUtil.generateToken(user.getId(), userDetails);
 
             Map<String, String> response = new HashMap<>();
@@ -150,39 +137,27 @@ public class AuthController {
     }
 
     @Operation(summary = "Обновление токена")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Токен успешно обновлен",
-                    content = @Content(schema = @Schema(implementation = Map.class))),
-            @ApiResponse(responseCode = "401", description = "Неавторизованный доступ",
-                    content = @Content(schema = @Schema(implementation = Map.class)))
-    })
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String authHeader) {
-        // ... существующая логика ...
         try {
             String token = authHeader.replace("Bearer ", "");
             String identifier = jwtUtil.extractUsername(token);
             
-            Optional<User> userOpt = userRepository.findByNickname(identifier);
+            User user = userRepository.findByNickname(identifier)
+                    .orElseGet(() -> userRepository.findByEmail(identifier)
+                    .orElseThrow(() -> new UnauthorizedException("Пользователь не найден")));
             
-            if (userOpt.isEmpty()) {
-                userOpt = userRepository.findByEmail(identifier);
-            }
-            
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("message", "Пользователь не найден"));
-            }
-            
-            User user = userOpt.get();
-            
-            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getNickname());
+            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                    user.getNickname(),
+                    user.getPassword(),
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+            );
+
             String newToken = jwtUtil.generateToken(user.getId(), userDetails);
             
             Map<String, Object> response = new HashMap<>();
             response.put("token", newToken);
             response.put("username", user.getNickname());
-            response.put("email", user.getEmail());
             response.put("role", user.getRole());
             
             return ResponseEntity.ok(response);
@@ -194,7 +169,6 @@ public class AuthController {
     }
 
     @Operation(summary = "Тестовый эндпоинт")
-    @ApiResponse(responseCode = "200", description = "Успешный ответ")
     @GetMapping("/test")
     public ResponseEntity<?> test() {
         return ResponseEntity.ok(Map.of("message", "Auth controller is working"));
