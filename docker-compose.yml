@@ -30,11 +30,10 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 12345
     volumes:
-      - ./backend/assets:/app/assets  # Сохраняем обложки на хосте
+      - ./backend/assets:/app/assets  # КРИТИЧЕСКИ ВАЖНО: пробрасываем обложки
     depends_on:
       db:
         condition: service_healthy
-    restart: always
 
 volumes:
   db_data:

@@ -17,14 +17,14 @@ public class WebConfig implements WebMvcConfigurer {
     
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Раздача ассетов из папки в корне проекта
-        registry.addResourceHandler("/assets/**")
-                .addResourceLocations("file:assets/")
+        // Раздача обложек через /covers/**
+        registry.addResourceHandler("/covers/**")
+                .addResourceLocations("file:/app/assets/covers/")
                 .setCachePeriod(3600);
         
-        // Дублируем для covers для совместимости
-        registry.addResourceHandler("/covers/**")
-                .addResourceLocations("file:assets/covers/")
+        // Раздача всех assets через /assets/**
+        registry.addResourceHandler("/assets/**")
+                .addResourceLocations("file:/app/assets/")
                 .setCachePeriod(3600);
     }
     
