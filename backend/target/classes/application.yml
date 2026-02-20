@@ -3,8 +3,13 @@ spring:
     url: jdbc:postgresql://localhost:5432/ebookreader
     username: postgres
     password: 12345
+  sql:
+    init:
+      mode: always 
+      continue-on-error: true
 
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
     show-sql: true
