@@ -4,6 +4,11 @@ import 'package:ebookreader/services/bookmark_service.dart';
 import 'package:ebookreader/screens/reader/reader_screen.dart';
 import 'package:ebookreader/constants/api_constants.dart';
 
+/// Экран детальной информации о книге.
+///
+/// Отображает обложку, название, автора, жанр и описание книги,
+/// а также список глав с возможностью перехода к чтению.
+/// Поддерживает добавление книги в закладки и сохранение прогресса чтения.
 class BookDetailScreen extends StatefulWidget {
   final String token;
   final int bookId;

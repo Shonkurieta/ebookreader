@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Экран загрузки приложения.
+///
+/// Отображается при запуске приложения и автоматически перенаправляет
+/// на экран входа через 2 секунды.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 

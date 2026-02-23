@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/admin_service.dart';
 
+/// Экран добавления новой книги.
+///
+/// Позволяет администратору заполнить название, автора, описание
+/// и загрузить обложку из галереи устройства. Выполняет валидацию
+/// всех обязательных полей перед отправкой данных на сервер.
 class AddBookScreen extends StatefulWidget {
   final String token;
   const AddBookScreen({super.key, required this.token});

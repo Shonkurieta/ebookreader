@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../services/admin_service.dart';
 
+/// Экран управления пользователями для администратора.
+///
+/// Отображает список всех зарегистрированных пользователей с информацией
+/// об имени, email и роли. Позволяет удалять пользователя из системы.
 class AdminUsersScreen extends StatefulWidget {
   final String token;
 

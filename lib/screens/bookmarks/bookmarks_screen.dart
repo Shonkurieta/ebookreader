@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:ebookreader/services/bookmark_service.dart';
 import 'package:ebookreader/screens/book/book_detail_screen.dart';
 
+/// Экран закладок.
+///
+/// Отображает список книг, добавленных пользователем в закладки.
+/// Позволяет быстро перейти к детальной странице книги или удалить закладку.
+/// Для каждой книги отображается обложка, название, автор и номер текущей главы.
 class BookmarksScreen extends StatefulWidget {
   final String token;
 

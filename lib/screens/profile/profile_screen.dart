@@ -4,6 +4,12 @@ import 'package:ebookreader/services/storage_service.dart';
 import 'package:ebookreader/screens/bookmarks/bookmarks_screen.dart';
 import 'package:ebookreader/screens/auth/login_screen.dart';
 
+/// Экран профиля пользователя.
+///
+/// Отображает имя пользователя, никнейм, email и роль в системе.
+/// Позволяет изменить никнейм, обновить пароль, перейти к закладкам
+/// или выйти из системы. После смены никнейма автоматически
+/// обновляет JWT-токен, если сервер вернул новый.
 class ProfileScreen extends StatefulWidget {
   final String token;
 

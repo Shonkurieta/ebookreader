@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:ebookreader/services/book_service.dart';
 import 'package:ebookreader/services/bookmark_service.dart';
 
+/// Экран чтения книги.
+///
+/// Отображает содержимое главы с настраиваемым размером шрифта и яркостью.
+/// Поддерживает навигацию между главами, скрытие/показ панели управления
+/// по нажатию на экран, а также автоматическое сохранение прогресса чтения.
 class ReaderScreen extends StatefulWidget {
   final String token;
   final int bookId;

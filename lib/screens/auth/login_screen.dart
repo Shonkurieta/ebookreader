@@ -6,6 +6,12 @@ import 'package:ebookreader/screens/user/user_home.dart';
 import 'package:ebookreader/screens/admin/admin_home.dart';
 import 'package:ebookreader/screens/auth/register_screen.dart';
 
+/// Экран входа в систему.
+///
+/// Позволяет пользователю аутентифицироваться по имени пользователя
+/// или email и паролю. После успешного входа направляет пользователя
+/// на соответствующий экран в зависимости от роли (USER или ADMIN).
+/// При запуске проверяет доступность сервера и уведомляет пользователя при недоступности.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 

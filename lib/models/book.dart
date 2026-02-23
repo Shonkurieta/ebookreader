@@ -1,3 +1,8 @@
+/// Модель данных книги.
+///
+/// Используется для представления книги, полученной с сервера.
+/// Содержит основные метаданные: идентификатор, название, автора,
+/// описание, а также ссылки на файл и обложку.
 class Book {
   final int id;
   final String title;
@@ -15,6 +20,7 @@ class Book {
     required this.coverUrl,
   });
 
+  /// Создаёт экземпляр [Book] из JSON-объекта, полученного от API.
   factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
       id: json['id'],

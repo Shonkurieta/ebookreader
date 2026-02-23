@@ -3,6 +3,12 @@ import 'package:ebookreader/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ebookreader/screens/user/user_home.dart';
 
+/// Экран регистрации нового пользователя.
+///
+/// Позволяет создать аккаунт, указав имя пользователя, email и пароль.
+/// Выполняет валидацию всех полей: минимальная длина имени пользователя,
+/// корректность email, минимальная длина пароля и совпадение паролей.
+/// После успешной регистрации автоматически направляет пользователя на домашний экран.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 

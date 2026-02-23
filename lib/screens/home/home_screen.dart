@@ -3,6 +3,11 @@ import 'package:ebookreader/services/book_service.dart';
 import 'package:ebookreader/screens/book/book_detail_screen.dart';
 import 'package:ebookreader/constants/api_constants.dart';
 
+/// Домашний экран библиотеки.
+///
+/// Отображает полный каталог доступных книг с поддержкой поиска
+/// по названию и автору. При нажатии на книгу открывается
+/// экран детальной информации [BookDetailScreen].
 class HomeScreen extends StatefulWidget {
   final String token;
 
