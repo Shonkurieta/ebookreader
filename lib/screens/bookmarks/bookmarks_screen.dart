@@ -159,7 +159,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> with SingleTickerProv
                             ),
                           ),
                           Text(
-                            'Сохранённые книги',
+                            'Ваши сохранённые книги',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.white.withValues(alpha: 0.6),
@@ -250,7 +250,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> with SingleTickerProv
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Добавляйте книги в закладки, чтобы быстро находить их',
+              'Здесь будут отображаться книги, которые вы добавили в избранное',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,

@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return const Scaffold(
       body: Center(
         child: Text(
-          'EbookReader',
+          'Ваша электронная библиотека',
           style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
         ),
       ),

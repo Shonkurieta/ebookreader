@@ -182,7 +182,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                       const SizedBox(height: 8),
 
                       Text(
-                        'Создайте новый аккаунт',
+                        'Присоединяйтесь к нашему сообществу читателей',
                         style: TextStyle(
                           fontSize: 15,
                           color: Colors.white.withValues(alpha: 0.6),
@@ -194,11 +194,11 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                       // Username field
                       _buildGlassTextField(
                         controller: _usernameController,
-                        label: 'Имя пользователя',
+                        label: 'Логин',
                         icon: Icons.person_outline,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Введите имя пользователя';
+                            return 'Введите логин';
                           }
                           if (value.trim().length < 3) {
                             return 'Минимум 3 символа';
