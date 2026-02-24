@@ -99,6 +99,10 @@ public class AdminServiceImpl implements AdminService {
         return bookRepository.save(existingBook);
     }
 
+    /**
+     * Удаляет книгу, все её главы и связи с пользователями.
+     * Перед удалением книги необходимо очистить таблицу user_books, чтобы избежать ошибок внешнего ключа.
+     */
     @Override
     @Transactional
     public void deleteBook(Long id) {
