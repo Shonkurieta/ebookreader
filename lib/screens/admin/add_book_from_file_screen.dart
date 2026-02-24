@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:archive/archive.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:xml/xml.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -160,6 +161,39 @@ class _AddBookFromFileScreenState extends State<AddBookFromFileScreen>
         }
         if (descEl != null && descEl.innerText.isNotEmpty) {
           _descController.text = descEl.innerText.trim();
+        }
+
+        // Извлекаем обложку
+        try {
+          final coverMeta = metadataEl.findAllElements('meta').firstWhere(
+            (el) => el.getAttribute('name') == 'cover',
+            orElse: () => XmlElement(XmlName('meta')),
+          );
+          String? coverId = coverMeta.getAttribute('content');
+          
+          if (coverId != null) {
+            final coverItem = opfDoc.findAllElements('item').firstWhere(
+              (el) => el.getAttribute('id') == coverId,
+              orElse: () => XmlElement(XmlName('item')),
+            );
+            final coverHref = coverItem.getAttribute('href');
+            if (coverHref != null) {
+              final fullCoverHref = opfDir + coverHref;
+              final coverFile = archive.firstWhere(
+                (f) => f.name == fullCoverHref || f.name.endsWith(coverHref),
+                orElse: () => ArchiveFile('', 0, []),
+              );
+              
+              if (coverFile.content.isNotEmpty) {
+                final tempDir = await getTemporaryDirectory();
+                final tempFile = File('${tempDir.path}/extracted_cover.jpg');
+                await tempFile.writeAsBytes(coverFile.content as List<int>);
+                setState(() => _cover = tempFile);
+              }
+            }
+          }
+        } catch (e) {
+          print('Ошибка извлечения обложки: $e');
         }
       }
 
