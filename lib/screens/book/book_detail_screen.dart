@@ -328,37 +328,75 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                   child: Row(
                     children: [
                       Expanded(
-                        child: Container(
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF14FFEC), Color(0xFF0D7377)],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF14FFEC).withValues(alpha: 0.4),
-                                blurRadius: 15,
-                                offset: const Offset(0, 6),
+                        child: _chapters.isEmpty
+                            ? Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.grey.withValues(alpha: 0.3),
+                                      Colors.grey.withValues(alpha: 0.2),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: ElevatedButton.icon(
+                                  onPressed: null,
+                                  icon: Icon(
+                                    Icons.lock_outline_rounded,
+                                    color: Colors.white.withValues(alpha: 0.4),
+                                  ),
+                                  label: Text(
+                                    'Нет глав для чтения',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.4),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF14FFEC), Color(0xFF0D7377)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF14FFEC).withValues(alpha: 0.4),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton.icon(
+                                  onPressed: () => _openReader(_currentChapter),
+                                  icon: const Icon(Icons.play_arrow_rounded),
+                                  label: Text(_currentChapter > 1
+                                      ? 'Продолжить (гл. $_currentChapter)'
+                                      : 'Начать читать'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                          child: ElevatedButton.icon(
-                            onPressed: () => _openReader(_currentChapter),
-                            icon: const Icon(Icons.play_arrow_rounded),
-                            label: Text(_currentChapter > 1
-                                ? 'Продолжить (гл. $_currentChapter)'
-                                : 'Начать читать'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ),
                       ),
                       const SizedBox(width: 12),
                       Container(
@@ -457,88 +495,142 @@ class _BookDetailScreenState extends State<BookDetailScreen>
               ),
 
               // Chapters list
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final chapter = _chapters[index];
-                    final chapterNum = chapter['chapterOrder'];
-                    final isCurrent = chapterNum == _currentChapter;
+              _chapters.isNotEmpty
+                  ? SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final chapter = _chapters[index];
+                          final chapterNum = chapter['chapterOrder'];
+                          final isCurrent = chapterNum == _currentChapter;
 
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: isCurrent
-                            ? const LinearGradient(
-                                colors: [Color(0xFF14FFEC), Color(0xFF0D7377)],
-                              )
-                            : LinearGradient(
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.05),
-                                  Colors.white.withValues(alpha: 0.02),
-                                ],
-                              ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isCurrent
-                              ? Colors.transparent
-                              : Colors.white.withValues(alpha: 0.08),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isCurrent
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : Colors.white.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '$chapterNum',
-                              style: TextStyle(
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: isCurrent
+                                  ? const LinearGradient(
+                                      colors: [Color(0xFF14FFEC), Color(0xFF0D7377)],
+                                    )
+                                  : LinearGradient(
+                                      colors: [
+                                        Colors.white.withValues(alpha: 0.05),
+                                        Colors.white.withValues(alpha: 0.02),
+                                      ],
+                                    ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
                                 color: isCurrent
-                                    ? Colors.white
-                                    : const Color(0xFF14FFEC),
-                                fontWeight: FontWeight.bold,
+                                    ? Colors.transparent
+                                    : Colors.white.withValues(alpha: 0.08),
+                                width: 1.5,
                               ),
                             ),
-                          ),
-                        ),
-                        title: Text(
-                          chapter['title'] ?? 'Глава $chapterNum',
-                          style: TextStyle(
-                            color: isCurrent
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        trailing: Icon(
-                          isCurrent
-                              ? Icons.play_circle_filled_rounded
-                              : Icons.arrow_forward_ios_rounded,
-                          color: isCurrent
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.4),
-                          size: isCurrent ? 24 : 16,
-                        ),
-                        onTap: () => _openReader(chapterNum),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: isCurrent
+                                      ? Colors.white.withValues(alpha: 0.2)
+                                      : Colors.white.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '$chapterNum',
+                                    style: TextStyle(
+                                      color: isCurrent
+                                          ? Colors.white
+                                          : const Color(0xFF14FFEC),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                chapter['title'] ?? 'Глава $chapterNum',
+                                style: TextStyle(
+                                  color: isCurrent
+                                      ? Colors.white
+                                      : Colors.white.withValues(alpha: 0.8),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              trailing: Icon(
+                                isCurrent
+                                    ? Icons.play_circle_filled_rounded
+                                    : Icons.arrow_forward_ios_rounded,
+                                color: isCurrent
+                                    ? Colors.white
+                                    : Colors.white.withValues(alpha: 0.4),
+                                size: isCurrent ? 24 : 16,
+                              ),
+                              onTap: () => _openReader(chapterNum),
+                            ),
+                          );
+                        },
+                        childCount: _chapters.length,
                       ),
-                    );
-                  },
-                  childCount: _chapters.length,
-                ),
-              ),
+                    )
+                  : SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 40),
+                        child: Container(
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.03),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: const Color(0xFF14FFEC)
+                                      .withValues(alpha: 0.1),
+                                ),
+                                child: const Icon(
+                                  Icons.menu_book_outlined,
+                                  size: 60,
+                                  color: Color(0xFF14FFEC),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              const Text(
+                                'Главы отсутствуют',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Эта книга пока не содержит глав для чтения',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
 
               const SliverToBoxAdapter(
                 child: SizedBox(height: 40),

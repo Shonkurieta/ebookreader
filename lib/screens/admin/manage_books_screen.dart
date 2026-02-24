@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ebookreader/services/book_service.dart';
 import 'package:ebookreader/screens/admin/add_book_screen.dart';
 import 'package:ebookreader/screens/admin/manage_chapters_screen.dart';
+import 'package:ebookreader/screens/admin/add_book_from_file_screen.dart';
 
 /// Экран управления каталогом книг.
 ///
@@ -161,6 +162,21 @@ class _ManageBooksScreenState extends State<ManageBooksScreen> with SingleTicker
       await _refreshBooks();
       if (mounted) {
         _showSnackBar('Книга успешно добавлена');
+      }
+    }
+  }
+
+  void _openAddBookFromFile() async {
+    final added = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddBookFromFileScreen(token: widget.token),
+      ),
+    );
+    if (added == true) {
+      await _refreshBooks();
+      if (mounted) {
+        _showSnackBar('Книга успешно добавлена из файла');
       }
     }
   }
@@ -504,33 +520,49 @@ class _ManageBooksScreenState extends State<ManageBooksScreen> with SingleTicker
         ),
       ),
       // FAB для добавления книги
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF14FFEC), Color(0xFF0D7377)],
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: 'add_from_file',
+            onPressed: _openAddBookFromFile,
+            backgroundColor: const Color(0xFF0D7377).withValues(alpha: 0.9),
+            foregroundColor: Colors.white,
+            elevation: 2,
+            tooltip: 'Добавить из EPUB файла',
+            child: const Icon(Icons.upload_file),
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF14FFEC).withValues(alpha: 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF14FFEC), Color(0xFF0D7377)],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF14FFEC).withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: _openAddBook,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text(
-            'Добавить',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+            child: FloatingActionButton.extended(
+              heroTag: 'add_book',
+              onPressed: _openAddBook,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'Добавить',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
