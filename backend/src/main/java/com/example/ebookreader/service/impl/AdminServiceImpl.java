@@ -22,6 +22,7 @@ import com.example.ebookreader.model.Chapter;
 import com.example.ebookreader.model.User;
 import com.example.ebookreader.repository.BookRepository;
 import com.example.ebookreader.repository.ChapterRepository;
+import com.example.ebookreader.repository.UserBookRepository;
 import com.example.ebookreader.repository.UserRepository;
 import com.example.ebookreader.service.AdminService;
 
@@ -31,12 +32,14 @@ public class AdminServiceImpl implements AdminService {
     private final BookRepository bookRepository;
     private final ChapterRepository chapterRepository;
     private final UserRepository userRepository;
+    private final UserBookRepository userBookRepository;
 
     @Autowired
-    public AdminServiceImpl(BookRepository bookRepository, ChapterRepository chapterRepository, UserRepository userRepository) {
+    public AdminServiceImpl(BookRepository bookRepository, ChapterRepository chapterRepository, UserRepository userRepository, UserBookRepository userBookRepository) {
         this.bookRepository = bookRepository;
         this.chapterRepository = chapterRepository;
         this.userRepository = userRepository;
+        this.userBookRepository = userBookRepository;
     }
 
     @Override
@@ -102,6 +105,10 @@ public class AdminServiceImpl implements AdminService {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена"));
 
+        // Удаляем связи пользователей с книгой
+        userBookRepository.deleteByBookId(id);
+
+        // Удаляем главы книги
         chapterRepository.deleteAll(chapterRepository.findByBookIdOrderByChapterOrderAsc(id));
 
         if (book.getCoverUrl() != null && !book.getCoverUrl().isEmpty()) {

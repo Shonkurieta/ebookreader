@@ -739,7 +739,7 @@ class _AddBookFromFileScreenState extends State<AddBookFromFileScreen>
                           maxLines: 4,
                         ),
 
-                        // Chapters selection
+                        // Chapters selection - Collapsible
                         if (_epubParsed && _extractedChapters.isNotEmpty) ...[
                           const SizedBox(height: 28),
                           Row(
@@ -794,45 +794,69 @@ class _AddBookFromFileScreenState extends State<AddBookFromFileScreen>
                                 color: Colors.white.withValues(alpha: 0.08),
                               ),
                             ),
-                            child: ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _extractedChapters.length,
-                              separatorBuilder: (_, __) => Divider(
-                                color: Colors.white.withValues(alpha: 0.05),
-                                height: 1,
+                            child: Theme(
+                              data: Theme.of(context).copyWith(
+                                expansionTileTheme: ExpansionTileThemeData(
+                                  backgroundColor: Colors.white.withValues(alpha: 0.02),
+                                  collapsedBackgroundColor: Colors.transparent,
+                                  textColor: const Color(0xFF14FFEC),
+                                  collapsedTextColor: Colors.white.withValues(alpha: 0.7),
+                                  iconColor: const Color(0xFF14FFEC),
+                                  collapsedIconColor: Colors.white.withValues(alpha: 0.5),
+                                ),
                               ),
-                              itemBuilder: (context, index) {
-                                final chapter = _extractedChapters[index];
-                                return CheckboxListTile(
-                                  value: _selectedChapters[index],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedChapters[index] =
-                                          value ?? false;
-                                    });
-                                  },
-                                  title: Text(
-                                    chapter['title']!,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
+                              child: ExpansionTile(
+                                title: Text(
+                                  'Главы для импорта (${_selectedChapters.where((c) => c).length}/${_extractedChapters.length})',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
                                   ),
-                                  subtitle: Text(
-                                    'Глава ${chapter['order']} • ${chapter['content']!.length} символов',
-                                    style: TextStyle(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.4),
-                                      fontSize: 11,
+                                ),
+                                children: [
+                                  ListView.separated(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: _extractedChapters.length,
+                                    separatorBuilder: (_, __) => Divider(
+                                      color: Colors.white.withValues(alpha: 0.05),
+                                      height: 1,
                                     ),
+                                    itemBuilder: (context, index) {
+                                      final chapter = _extractedChapters[index];
+                                      return CheckboxListTile(
+                                        value: _selectedChapters[index],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedChapters[index] =
+                                                value ?? false;
+                                          });
+                                        },
+                                        title: Text(
+                                          chapter['title']!,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          'Глава ${chapter['order']} • ${chapter['content']!.length} символов',
+                                          style: TextStyle(
+                                            color:
+                                                Colors.white.withValues(alpha: 0.4),
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        activeColor: const Color(0xFF14FFEC),
+                                        checkColor: Colors.black,
+                                        dense: true,
+                                      );
+                                    },
                                   ),
-                                  activeColor: const Color(0xFF14FFEC),
-                                  checkColor: Colors.black,
-                                  dense: true,
-                                );
-                              },
+                                ],
+                              ),
                             ),
                           ),
                         ],
