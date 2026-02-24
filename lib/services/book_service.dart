@@ -1,10 +1,19 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+/// Сервис для работы с книгами.
+///
+/// Предоставляет методы для получения, поиска, добавления, обновления
+/// и удаления книг через серверное API. Методы с префиксом `admin`
+/// требуют прав администратора.
 class BookService {
+  /// Базовый URL серверного API.
   final String baseUrl = 'http://172.28.59.182:8080/api';
 
-  // Получить все книги
+  /// Возвращает список всех книг, доступных пользователю.
+  ///
+  /// Отправляет GET-запрос на `/books`.
+  /// Выбрасывает [Exception] при ошибке авторизации или сервера.
   Future<List<dynamic>> getAllBooks(String token) async {
     try {
       print('=== GET ALL BOOKS REQUEST ===');
@@ -45,7 +54,10 @@ class BookService {
     }
   }
 
-  // Получить все книги (для админа)
+  /// Возвращает список всех книг для панели администратора.
+  ///
+  /// Отправляет GET-запрос на `/admin/books`. Требует прав администратора.
+  /// Выбрасывает [Exception] при отсутствии прав или ошибке сервера.
   Future<List<dynamic>> getAdminBooks(String token) async {
     try {
       print('=== GET ADMIN BOOKS REQUEST ===');
@@ -86,7 +98,10 @@ class BookService {
     }
   }
 
-  // Получить книгу по ID
+  /// Возвращает данные конкретной книги по её идентификатору.
+  ///
+  /// Отправляет GET-запрос на `/books/{bookId}`.
+  /// Выбрасывает [Exception], если книга не найдена или произошла ошибка.
   Future<Map<String, dynamic>> getBookById(String token, int bookId) async {
     try {
       print('=== GET BOOK BY ID REQUEST ===');
@@ -121,7 +136,10 @@ class BookService {
     }
   }
 
-  // Добавить книгу (для админа)
+  /// Добавляет новую книгу (только для администратора).
+  ///
+  /// Отправляет POST-запрос на `/admin/books` с данными книги.
+  /// Возвращает ответ сервера. Выбрасывает [Exception] при ошибке.
   Future<Map<String, dynamic>> addBook(String token, Map<String, dynamic> bookData) async {
     try {
       print('=== ADD BOOK REQUEST ===');
@@ -161,7 +179,10 @@ class BookService {
     }
   }
 
-  // Обновить книгу (для админа)
+  /// Обновляет данные существующей книги (только для администратора).
+  ///
+  /// Отправляет PUT-запрос на `/admin/books/{bookId}`.
+  /// Выбрасывает [Exception], если книга не найдена или данные некорректны.
   Future<Map<String, dynamic>> updateBook(String token, int bookId, Map<String, dynamic> bookData) async {
     try {
       print('=== UPDATE BOOK REQUEST ===');
@@ -203,7 +224,10 @@ class BookService {
     }
   }
 
-  // Удалить книгу (для админа)
+  /// Удаляет книгу по идентификатору (только для администратора).
+  ///
+  /// Отправляет DELETE-запрос на `/admin/books/{bookId}`.
+  /// Выбрасывает [Exception], если книга не найдена или нет прав доступа.
   Future<void> deleteBook(String token, int bookId) async {
     try {
       print('=== DELETE BOOK REQUEST ===');
@@ -238,12 +262,15 @@ class BookService {
     }
   }
 
-  // Alias для совместимости (для обычных пользователей)
+  /// Псевдоним для [getAllBooks] — для совместимости с другими частями приложения.
   Future<List<dynamic>> fetchBooks(String token) async {
     return getAllBooks(token);
   }
 
-  // Поиск книг
+  /// Выполняет поиск книг по строке запроса.
+  ///
+  /// Отправляет GET-запрос на `/books/search?query=...`.
+  /// При ошибке возвращает пустой список вместо выброса исключения.
   Future<List<dynamic>> searchBooks(String token, String query) async {
     try {
       print('=== SEARCH BOOKS REQUEST ===');
@@ -281,7 +308,10 @@ class BookService {
     }
   }
 
-  // Получить главы книги
+  /// Возвращает список глав указанной книги.
+  ///
+  /// Отправляет GET-запрос на `/books/{bookId}/chapters`.
+  /// При ошибке или пустом ответе возвращает пустой список.
   Future<List<dynamic>> getBookChapters(String token, int bookId) async {
     try {
       print('=== GET BOOK CHAPTERS REQUEST ===');
@@ -318,7 +348,10 @@ class BookService {
     }
   }
 
-  // Получить конкретную главу
+  /// Возвращает содержимое конкретной главы книги.
+  ///
+  /// Отправляет GET-запрос на `/books/{bookId}/chapters/{chapterOrder}`.
+  /// Выбрасывает [Exception], если глава не найдена или произошла ошибка.
   Future<Map<String, dynamic>> getChapter(String token, int bookId, int chapterOrder) async {
     try {
       print('=== GET CHAPTER REQUEST ===');

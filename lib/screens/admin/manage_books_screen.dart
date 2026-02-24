@@ -3,6 +3,10 @@ import 'package:ebookreader/services/book_service.dart';
 import 'package:ebookreader/screens/admin/add_book_screen.dart';
 import 'package:ebookreader/screens/admin/manage_chapters_screen.dart';
 
+/// Экран управления каталогом книг.
+///
+/// Отображает список всех книг с возможностью добавления новых ([AddBookScreen]),
+/// редактирования, удаления и управления главами ([ManageChaptersScreen]).
 class ManageBooksScreen extends StatefulWidget {
   final String token;
 

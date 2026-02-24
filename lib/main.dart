@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// 🔹 Экраны
+// Экраны приложения
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -11,12 +11,21 @@ import 'screens/admin/admin_home.dart';
 import 'screens/bookmarks/bookmarks_screen.dart';
 import 'screens/user/user_home.dart';
 
+/// Точка входа в приложение.
+///
+/// Инициализирует Flutter-привязки, загружает переменные окружения
+/// из файла `.env` и запускает корневой виджет [MyApp].
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
+/// Корневой виджет приложения EBook Reader.
+///
+/// При запуске проверяет наличие сохранённой сессии пользователя
+/// и направляет его на соответствующий экран: панель администратора,
+/// домашний экран пользователя или экран входа.
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -35,6 +44,9 @@ class _MyAppState extends State<MyApp> {
     _loadUserSession();
   }
 
+  /// Загружает сохранённые данные сессии из локального хранилища.
+  ///
+  /// Восстанавливает токен и роль пользователя для автоматического входа.
   Future<void> _loadUserSession() async {
     final prefs = await SharedPreferences.getInstance();
     final savedToken = prefs.getString('token');

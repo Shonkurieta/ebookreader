@@ -1,20 +1,32 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+/// Константы для работы с серверным API.
+///
+/// Все URL формируются на основе базового адреса сервера,
+/// заданного в переменной окружения `API_BASE_URL` файла `.env`.
 class ApiConstants {
+  /// Базовый URL API (включает префикс `/api`).
   static String get baseUrl => '${dotenv.env['API_BASE_URL']}/api';
+
+  /// URL для эндпоинтов аутентификации (`/api/auth`).
   static String get authUrl => '$baseUrl/auth';
+
+  /// URL для эндпоинтов панели администратора (`/api/admin`).
   static String get adminUrl => '$baseUrl/admin';
+
+  /// URL для эндпоинтов работы с книгами (`/api/books`).
   static String get booksUrl => '$baseUrl/books';
-  
-  // Добавляем метод для получения URL обложки
+
+  /// Формирует полный URL для обложки книги по относительному пути.
+  ///
+  /// Если [coverPath] начинается с `/`, URL формируется как `{host}{coverPath}`.
+  /// В противном случае добавляется разделитель `/`.
   static String getCoverUrl(String coverPath) {
     final apiBase = dotenv.env['API_BASE_URL'] ?? 'http://172.28.59.182:8080';
     
-    // Если coverPath уже начинается с /, просто добавляем baseUrl
     if (coverPath.startsWith('/')) {
       return '$apiBase$coverPath';
     }
-    // Если нет, добавляем /
     return '$apiBase/$coverPath';
   }
 }

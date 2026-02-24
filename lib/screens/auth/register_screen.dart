@@ -3,6 +3,12 @@ import 'package:ebookreader/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ebookreader/screens/user/user_home.dart';
 
+/// Экран регистрации нового пользователя.
+///
+/// Позволяет создать аккаунт, указав имя пользователя, email и пароль.
+/// Выполняет валидацию всех полей: минимальная длина имени пользователя,
+/// корректность email, минимальная длина пароля и совпадение паролей.
+/// После успешной регистрации автоматически направляет пользователя на домашний экран.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -182,7 +188,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                       const SizedBox(height: 8),
 
                       Text(
-                        'Создайте новый аккаунт',
+                        'Присоединяйтесь к нашему сообществу читателей',
                         style: TextStyle(
                           fontSize: 15,
                           color: Colors.white.withValues(alpha: 0.6),
@@ -194,11 +200,11 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                       // Username field
                       _buildGlassTextField(
                         controller: _usernameController,
-                        label: 'Имя пользователя',
+                        label: 'Логин',
                         icon: Icons.person_outline,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Введите имя пользователя';
+                            return 'Введите логин';
                           }
                           if (value.trim().length < 3) {
                             return 'Минимум 3 символа';

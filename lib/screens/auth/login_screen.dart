@@ -6,6 +6,12 @@ import 'package:ebookreader/screens/user/user_home.dart';
 import 'package:ebookreader/screens/admin/admin_home.dart';
 import 'package:ebookreader/screens/auth/register_screen.dart';
 
+/// Экран входа в систему.
+///
+/// Позволяет пользователю аутентифицироваться по имени пользователя
+/// или email и паролю. После успешного входа направляет пользователя
+/// на соответствующий экран в зависимости от роли (USER или ADMIN).
+/// При запуске проверяет доступность сервера и уведомляет пользователя при недоступности.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -50,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             children: [
               Icon(Icons.warning_amber_rounded, color: Colors.white),
               SizedBox(width: 12),
-              Text('Не удается подключиться к серверу'),
+              Text('Не удается подключиться к серверу. Проверьте интернет-соединение'),
             ],
           ),
           backgroundColor: Colors.orange.shade700,
@@ -102,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             children: [
               const Icon(Icons.check_circle, color: Colors.white),
               const SizedBox(width: 12),
-              Text('Добро пожаловать, $usernameFromServer!'),
+              Text('С возвращением, $usernameFromServer!'),
             ],
           ),
           backgroundColor: Colors.green.shade600,
@@ -226,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       const SizedBox(height: 8),
 
                       Text(
-                        'Войдите в свой аккаунт',
+                        'Войдите, чтобы продолжить чтение',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.white.withValues(alpha: 0.6),
@@ -239,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       // Username field
                       _buildGlassTextField(
                         controller: _usernameController,
-                        label: 'Email или имя пользователя',
+                        label: 'Email или логин',
                         hint: 'example@mail.com',
                         icon: Icons.person_outline,
                         validator: (value) {

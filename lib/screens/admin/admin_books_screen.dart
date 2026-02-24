@@ -4,6 +4,11 @@ import '../../constants/api_constants.dart';
 import 'add_book_screen.dart';
 import 'manage_chapters_screen.dart';
 
+/// Экран управления книгами для администратора.
+///
+/// Отображает полный список книг с возможностью добавления, редактирования
+/// и удаления. Для каждой книги доступен переход к экрану
+/// управления главами [ManageChaptersScreen].
 class AdminBooksScreen extends StatefulWidget {
   final String token;
 

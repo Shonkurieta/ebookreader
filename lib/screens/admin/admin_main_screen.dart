@@ -3,6 +3,12 @@ import 'admin_books_screen.dart';
 import 'admin_users_screen.dart';
 import 'admin_profile_screen.dart';
 
+/// Главный экран панели администратора.
+///
+/// Реализует нижнюю навигационную панель с тремя разделами:
+/// управление книгами ([AdminBooksScreen]),
+/// управление пользователями ([AdminUsersScreen])
+/// и профиль администратора ([AdminProfileScreen]).
 class AdminMainScreen extends StatefulWidget {
   final String token;
 

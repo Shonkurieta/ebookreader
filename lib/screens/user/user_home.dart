@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:ebookreader/screens/home/home_screen.dart';
 import 'package:ebookreader/screens/profile/profile_screen.dart';
 
+/// Корневой экран для обычного пользователя.
+///
+/// Реализует нижнюю навигационную панель с двумя вкладками:
+/// каталог книг ([HomeScreen]) и профиль пользователя ([ProfileScreen]).
 class UserHome extends StatefulWidget {
   final String token;
   const UserHome({super.key, required this.token});

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Экран загрузки приложения.
+///
+/// Отображается при запуске приложения и автоматически перенаправляет
+/// на экран входа через 2 секунды.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -21,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return const Scaffold(
       body: Center(
         child: Text(
-          'EbookReader',
+          'Ваша электронная библиотека',
           style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
         ),
       ),

@@ -1,14 +1,24 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+/// Сервис для работы с профилем пользователя и пользовательскими данными.
+///
+/// Предоставляет методы для получения и обновления профиля,
+/// смены пароля, управления закладками и прогрессом чтения.
+/// Методы раздела «ADMIN» требуют прав администратора.
 class UserService {
+  /// Базовый URL серверного API.
   final String baseUrl = 'http://172.28.59.182:8080/api';
 
   // ========================================
   // ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ
   // ========================================
 
-  /// Получить профиль текущего пользователя
+  /// Возвращает профиль текущего авторизованного пользователя.
+  ///
+  /// Отправляет GET-запрос на `/user/profile`.
+  /// Автоматически исправляет токен, если он содержит лишний префикс `Bearer `.
+  /// Выбрасывает [Exception] при ошибке авторизации или сервера.
   Future<Map<String, dynamic>> getProfile(String token) async {
     try {
       print('=== GET PROFILE REQUEST ===');
@@ -16,7 +26,7 @@ class UserService {
       print('Token length: ${token.length}');
       print('Token (first 50 chars): ${token.length > 50 ? token.substring(0, 50) : token}...');
       
-      // Проверка на двойной Bearer
+      // Исправляем токен, если он уже содержит префикс "Bearer "
       if (token.startsWith('Bearer ')) {
         print('⚠️ WARNING: Token already contains "Bearer " prefix!');
         token = token.substring(7);
@@ -52,7 +62,11 @@ class UserService {
     }
   }
 
-  /// ✅ ИСПРАВЛЕНО: Обновить никнейм (правильный эндпоинт /user/nickname)
+  /// Обновляет никнейм текущего пользователя.
+  ///
+  /// Отправляет PUT-запрос на `/api/user/nickname`.
+  /// Возвращает ответ сервера, который может содержать обновлённый JWT-токен.
+  /// Выбрасывает [Exception] при ошибке.
   Future<Map<String, dynamic>> updateNickname(String token, String nickname) async {
   final response = await http.put(
     Uri.parse('$baseUrl/api/user/nickname'),
@@ -64,18 +78,23 @@ class UserService {
   );
 
   if (response.statusCode == 200) {
-    return json.decode(response.body); // ✅ Возвращаем весь ответ
+    return json.decode(response.body);
   } else {
     throw Exception(json.decode(response.body)['message'] ?? 'Ошибка обновления никнейма');
   }
   }
 
-  /// Alias для совместимости со старым кодом
+  /// Псевдоним для [updateNickname] — для совместимости со старым кодом.
   Future<Map<String, dynamic>> updateProfile(String token, String newNickname) async {
     return updateNickname(token, newNickname);
   }
 
-  /// ✅ НОВЫЙ МЕТОД: Обновить токен (используется после смены никнейма)
+  /// Обновляет JWT-токен пользователя.
+  ///
+  /// Отправляет POST-запрос на `/auth/refresh`.
+  /// Используется после операций, которые могут изменить данные токена
+  /// (например, смена никнейма).
+  /// Выбрасывает [Exception] при истечении сессии или ошибке сервера.
   Future<Map<String, dynamic>> refreshToken(String token) async {
     try {
       print('=== REFRESH TOKEN REQUEST ===');
@@ -108,7 +127,10 @@ class UserService {
     }
   }
 
-  /// Изменить пароль
+  /// Изменяет пароль текущего пользователя.
+  ///
+  /// Отправляет PUT-запрос на `/user/password` со старым и новым паролями.
+  /// Выбрасывает [Exception], если старый пароль неверен или произошла ошибка.
   Future<void> changePassword(String token, String oldPassword, String newPassword) async {
     try {
       print('=== CHANGE PASSWORD REQUEST ===');
@@ -154,7 +176,10 @@ class UserService {
   // ЗАКЛАДКИ
   // ========================================
 
-  /// Добавить книгу в закладки
+  /// Добавляет книгу в закладки пользователя.
+  ///
+  /// Отправляет POST-запрос на `/user/books/{bookId}/bookmark`.
+  /// Выбрасывает [Exception], если книга не найдена или нет доступа.
   Future<void> addBookmark(String token, int bookId) async {
     try {
       print('=== ADD BOOKMARK REQUEST ===');
@@ -188,7 +213,10 @@ class UserService {
     }
   }
 
-  /// Удалить книгу из закладок
+  /// Удаляет книгу из закладок пользователя.
+  ///
+  /// Отправляет DELETE-запрос на `/user/books/{bookId}/bookmark`.
+  /// Выбрасывает [Exception], если закладка не найдена или произошла ошибка.
   Future<void> removeBookmark(String token, int bookId) async {
     try {
       print('=== REMOVE BOOKMARK REQUEST ===');
@@ -220,7 +248,10 @@ class UserService {
     }
   }
 
-  /// Получить все закладки пользователя
+  /// Возвращает список всех закладок пользователя.
+  ///
+  /// Отправляет GET-запрос на `/user/books/bookmarks`.
+  /// При ошибке или пустом ответе возвращает пустой список.
   Future<List<dynamic>> getBookmarks(String token) async {
     try {
       print('=== GET BOOKMARKS REQUEST ===');
@@ -259,7 +290,10 @@ class UserService {
     }
   }
 
-  /// Обновить прогресс чтения
+  /// Сохраняет прогресс чтения пользователя для указанной книги.
+  ///
+  /// Отправляет PUT-запрос на `/user/books/{bookId}/progress` с номером главы.
+  /// Выбрасывает [Exception] при ошибке сервера.
   Future<void> updateProgress(String token, int bookId, int chapter) async {
     try {
       print('=== UPDATE PROGRESS REQUEST ===');
@@ -288,7 +322,11 @@ class UserService {
     }
   }
 
-  /// Получить прогресс чтения книги
+  /// Возвращает сохранённый прогресс чтения для указанной книги.
+  ///
+  /// Отправляет GET-запрос на `/user/books/{bookId}/progress`.
+  /// При ошибке возвращает значения по умолчанию:
+  /// первая глава и отсутствие закладки.
   Future<Map<String, dynamic>> getProgress(String token, int bookId) async {
     try {
       print('=== GET PROGRESS REQUEST ===');
@@ -323,7 +361,10 @@ class UserService {
   // ADMIN ФУНКЦИИ
   // ========================================
 
-  /// Получить всех пользователей (для админа)
+  /// Возвращает список всех зарегистрированных пользователей (только для администратора).
+  ///
+  /// Отправляет GET-запрос на `/admin/users`. Требует прав администратора.
+  /// Выбрасывает [Exception] при отсутствии прав или ошибке сервера.
   Future<List<dynamic>> getAllUsers(String token) async {
     try {
       print('=== GET ALL USERS REQUEST ===');
@@ -364,12 +405,15 @@ class UserService {
     }
   }
 
-  /// Alias для совместимости
+  /// Псевдоним для [getAllUsers] — для совместимости со старым кодом.
   Future<List<dynamic>> fetchUsers(String token) async {
     return getAllUsers(token);
   }
 
-  /// Удалить пользователя (для админа)
+  /// Удаляет пользователя по идентификатору (только для администратора).
+  ///
+  /// Отправляет DELETE-запрос на `/admin/users/{userId}`.
+  /// Выбрасывает [Exception], если пользователь не найден или нет прав доступа.
   Future<void> deleteUser(String token, int userId) async {
     try {
       print('=== DELETE USER REQUEST ===');

@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../constants/api_constants.dart';
 
+/// Экран управления главами книги.
+///
+/// Отображает список глав выбранной книги с возможностью добавления,
+/// редактирования и удаления глав. Позволяет задавать название,
+/// содержимое и порядковый номер главы в пределах книги.
 class ManageChaptersScreen extends StatefulWidget {
   final String token;
   final int bookId;

@@ -3,6 +3,12 @@ import 'package:ebookreader/screens/admin/manage_books_screen.dart';
 import 'package:ebookreader/screens/admin/manage_users_screen.dart';
 import 'package:ebookreader/screens/profile/profile_screen.dart';
 
+/// Корневой экран панели администратора.
+///
+/// Реализует нижнюю навигационную панель с тремя вкладками:
+/// управление книгами ([ManageBooksScreen]),
+/// управление пользователями ([ManageUsersScreen])
+/// и профиль администратора ([ProfileScreen]).
 class AdminHome extends StatefulWidget {
   final String token;
   const AdminHome({super.key, required this.token});

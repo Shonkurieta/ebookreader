@@ -4,6 +4,12 @@ import 'package:ebookreader/services/storage_service.dart';
 import 'package:ebookreader/screens/bookmarks/bookmarks_screen.dart';
 import 'package:ebookreader/screens/auth/login_screen.dart';
 
+/// Экран профиля пользователя.
+///
+/// Отображает имя пользователя, никнейм, email и роль в системе.
+/// Позволяет изменить никнейм, обновить пароль, перейти к закладкам
+/// или выйти из системы. После смены никнейма автоматически
+/// обновляет JWT-токен, если сервер вернул новый.
 class ProfileScreen extends StatefulWidget {
   final String token;
 
@@ -83,7 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'Вы уверены, что хотите выйти?',
+          'Вы действительно хотите выйти из своего аккаунта?',
           style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
         ),
         actions: [
@@ -128,14 +134,14 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       backgroundColor: const Color(0xFF1A1F3A),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: const Text(
-        'Изменить никнейм',
+        'Смена имени пользователя',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       content: TextField(
         controller: controller,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          labelText: 'Новый никнейм',
+          labelText: 'Введите новое имя',
           labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -614,7 +620,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
                         _buildMenuItem(
                           icon: Icons.person_outline,
-                          title: 'Изменить никнейм',
+                          title: 'Смена имени пользователя',
                           description: nickname.isNotEmpty
                               ? nickname
                               : 'Не установлен',

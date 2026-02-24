@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Экран профиля администратора.
+///
+/// Отображает данные администратора: имя пользователя, email и роль.
+/// Позволяет выйти из системы, что очищает данные сессии
+/// и направляет на экран входа.
 class AdminProfileScreen extends StatefulWidget {
   final String token;
 

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ebookreader/services/user_service.dart';
 
+/// Экран управления пользователями.
+///
+/// Отображает список всех зарегистрированных пользователей с информацией
+/// об имени, email и роли. Позволяет удалять аккаунт пользователя
+/// с подтверждением через диалоговое окно.
 class ManageUsersScreen extends StatefulWidget {
   final String token;
 

@@ -3,6 +3,11 @@ import 'package:ebookreader/services/book_service.dart';
 import 'package:ebookreader/screens/book/book_detail_screen.dart';
 import 'package:ebookreader/constants/api_constants.dart';
 
+/// Домашний экран библиотеки.
+///
+/// Отображает полный каталог доступных книг с поддержкой поиска
+/// по названию и автору. При нажатии на книгу открывается
+/// экран детальной информации [BookDetailScreen].
 class HomeScreen extends StatefulWidget {
   final String token;
 
@@ -165,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Библиотека',
+                                'Ваша библиотека',
                                 style: TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.bold,
@@ -291,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
           const SizedBox(height: 8),
           Text(
-            'Попробуйте изменить запрос',
+            'Попробуйте поискать по другому названию или автору',
             style: TextStyle(
               fontSize: 14,
               color: Colors.white.withValues(alpha: 0.5),

@@ -6,8 +6,14 @@ import 'package:http_parser/http_parser.dart';
 import 'package:path/path.dart' as p;
 import '../constants/api_constants.dart';
 
+/// Сервис для административных операций.
+///
+/// Предоставляет методы для управления книгами и пользователями
+/// через серверное API. Все запросы требуют JWT-токена администратора.
+/// Базовый URL берётся из переменной окружения `ADMIN_API_URL`
+/// или из [ApiConstants.adminUrl] в качестве запасного значения.
 class AdminService {
-  /// Базовый URL из .env или fallback
+  /// Базовый URL административного API.
   static final String baseUrl =
       dotenv.env['ADMIN_API_URL'] ?? ApiConstants.adminUrl;
 
@@ -15,12 +21,15 @@ class AdminService {
 
   AdminService(this.token);
 
-  /// Общие заголовки
+  /// Заголовки авторизации для всех запросов.
   Map<String, String> get headers => {
         'Authorization': 'Bearer $token',
       };
 
-  /// === 📚 Получить все книги ===
+  /// Возвращает список всех книг из административного каталога.
+  ///
+  /// Отправляет GET-запрос на `/admin/books`.
+  /// Выбрасывает [Exception] при отсутствии прав или ошибке сервера.
   Future<List<dynamic>> getBooks() async {
     final url = Uri.parse('$baseUrl/books');
     print('📡 [getBooks] GET $url');
@@ -39,7 +48,12 @@ class AdminService {
     }
   }
 
-  /// === ➕ Добавить книгу (multipart) ===
+  /// Добавляет новую книгу с обложкой через multipart-запрос.
+  ///
+  /// Отправляет POST-запрос на `/admin/books` с полями формы:
+  /// [title], [author], [description] и файлом обложки [coverFile].
+  /// MIME-тип обложки определяется автоматически по расширению файла.
+  /// Выбрасывает [Exception] при ошибке или отсутствии прав доступа.
   Future<void> addBookMultipart({
     required String title,
     required String author,
@@ -52,7 +66,7 @@ class AdminService {
     final request = http.MultipartRequest('POST', uri);
     request.headers.addAll(headers);
 
-    // Отправляем поля отдельно (НЕ как JSON!)
+    // Поля отправляются отдельно (не как JSON)
     request.fields['title'] = title;
     request.fields['author'] = author;
     if (description != null && description.isNotEmpty) {
@@ -61,14 +75,14 @@ class AdminService {
 
     print('📝 Fields: ${request.fields}');
 
-    // если выбрана обложка
+    // Добавляем обложку, если она выбрана
     if (coverFile != null) {
       final length = await coverFile.length();
       final stream = http.ByteStream(coverFile.openRead());
       
-      // Определяем MIME тип по расширению
+      // Определяем MIME-тип по расширению файла
       String ext = p.extension(coverFile.path).toLowerCase();
-      MediaType contentType = MediaType('image', 'jpeg'); // default
+      MediaType contentType = MediaType('image', 'jpeg'); // по умолчанию
       
       if (ext == '.png') {
         contentType = MediaType('image', 'png');
@@ -86,7 +100,7 @@ class AdminService {
         contentType: contentType,
       );
       request.files.add(multipartFile);
-      print('🖼 Cover file: ${p.basename(coverFile.path)} (${length} bytes)');
+      print('🖼 Cover file: ${p.basename(coverFile.path)} ($length bytes)');
     }
 
     final streamed = await request.send();
@@ -103,7 +117,10 @@ class AdminService {
     }
   }
 
-  /// === 🗑 Удалить книгу ===
+  /// Удаляет книгу по идентификатору.
+  ///
+  /// Отправляет DELETE-запрос на `/admin/books/{id}`.
+  /// Выбрасывает [Exception] при ошибке сервера.
   Future<void> deleteBook(int id) async {
     final url = Uri.parse('$baseUrl/books/$id');
     print('📡 [deleteBook] DELETE $url');
@@ -114,7 +131,10 @@ class AdminService {
     }
   }
 
-  /// === 👥 Получить всех пользователей ===
+  /// Возвращает список всех зарегистрированных пользователей.
+  ///
+  /// Отправляет GET-запрос на `/admin/users`.
+  /// Выбрасывает [Exception] при отсутствии прав или ошибке сервера.
   Future<List<dynamic>> getUsers() async {
     final url = Uri.parse('$baseUrl/users');
     print('📡 [getUsers] GET $url');
@@ -131,7 +151,10 @@ class AdminService {
     }
   }
 
-  /// === ❌ Удалить пользователя ===
+  /// Удаляет пользователя по идентификатору.
+  ///
+  /// Отправляет DELETE-запрос на `/admin/users/{id}`.
+  /// Выбрасывает [Exception] при ошибке сервера.
   Future<void> deleteUser(int id) async {
     final url = Uri.parse('$baseUrl/users/$id');
     print('📡 [deleteUser] DELETE $url');
@@ -142,7 +165,10 @@ class AdminService {
     }
   }
 
-  /// === 🔄 Изменить роль пользователя ===
+  /// Изменяет роль пользователя.
+  ///
+  /// Отправляет PUT-запрос на `/admin/users/{id}/role?role={newRole}`.
+  /// Выбрасывает [Exception] при ошибке сервера.
   Future<void> changeUserRole(int id, String newRole) async {
     final url = Uri.parse('$baseUrl/users/$id/role?role=$newRole');
     print('📡 [changeUserRole] PUT $url');
