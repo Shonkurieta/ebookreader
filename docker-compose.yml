@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ebookreader"]
       interval: 5s
@@ -30,10 +30,10 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 12345
     volumes:
-      - ./backend/assets:/app/assets  # КРИТИЧЕСКИ ВАЖНО: пробрасываем обложки
+      - ./backend_assets:/app/assets
     depends_on:
       db:
         condition: service_healthy
 
-volumes:
-  db_data:
+# Данные теперь сохраняются в локальные папки ./postgres_data и ./backend_assets
+# Это гарантирует, что они не пропадут при перезагрузке Docker.
