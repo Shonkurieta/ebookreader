@@ -1,22 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// Сервис аутентификации.
-///
-/// Отвечает за взаимодействие с серверным API в части регистрации,
-/// входа в систему и проверки доступности сервера.
-/// Все запросы направляются на базовый URL [baseUrl].
 class AuthService {
-  /// Базовый URL серверного API.
   final String baseUrl = 'http://172.28.59.182:8080/api';
 
-  /// Регистрирует нового пользователя.
-  ///
-  /// Отправляет POST-запрос на `/auth/register` с именем пользователя,
-  /// адресом электронной почты и паролем.
-  /// Возвращает JSON-ответ сервера, содержащий токен и роль.
-  ///
-  /// Выбрасывает [Exception] при ошибке сервера или неверных данных.
   Future<Map<String, dynamic>> register(
       String username, String email, String password) async {
     try {
@@ -52,13 +39,6 @@ class AuthService {
     }
   }
 
-  /// Выполняет вход пользователя в систему.
-  ///
-  /// Отправляет POST-запрос на `/auth/login` с именем пользователя
-  /// (или email) и паролем.
-  /// Возвращает JSON-ответ сервера, содержащий JWT-токен и роль пользователя.
-  ///
-  /// Выбрасывает [Exception] при неверных учётных данных или ошибке сервера.
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       print('=== LOGIN REQUEST ===');
@@ -99,12 +79,7 @@ class AuthService {
       rethrow;
     }
   }
-
-  /// Проверяет доступность серверного API.
-  ///
-  /// Отправляет GET-запрос на тестовый эндпоинт `/auth/test`.
-  /// Возвращает `true`, если сервер отвечает со статусом 200,
-  /// и `false` в случае ошибки или недоступности.
+  
   Future<bool> testConnection() async {
     try {
       print('Testing connection to: $baseUrl/auth/test');
