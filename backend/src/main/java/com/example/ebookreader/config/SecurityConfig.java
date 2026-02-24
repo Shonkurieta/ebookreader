@@ -59,6 +59,7 @@ public class SecurityConfig {
                 // ✅ Статические файлы
                 .requestMatchers("/covers/**").permitAll()
                 .requestMatchers("/assets/**").permitAll()
+                .requestMatchers("/api/admin/covers/**").permitAll()
                 
                 // ✅ Swagger UI
                 .requestMatchers("/swagger-ui/**").permitAll()

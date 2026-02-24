@@ -24,6 +24,20 @@ class ApiConstants {
   static String getCoverUrl(String coverPath) {
     final apiBase = dotenv.env['API_BASE_URL'] ?? 'http://172.28.59.182:8080';
     
+    // Если это уже полный URL
+    if (coverPath.startsWith('http')) return coverPath;
+    
+    // Если путь содержит assets/covers, преобразуем его в эндпоинт API
+    if (coverPath.contains('assets/covers/')) {
+      final filename = coverPath.split('/').last;
+      return '$apiBase/api/admin/covers/$filename';
+    }
+    
+    // Для путей, которые уже являются именами файлов
+    if (!coverPath.contains('/')) {
+      return '$apiBase/api/admin/covers/$coverPath';
+    }
+
     if (coverPath.startsWith('/')) {
       return '$apiBase$coverPath';
     }
