@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ebookreader-backend</a> &gt; <a href="index.source.html" class="el_package">com.example.ebookreader.config</a> &gt; <span class="el_source">JwtFilter.java</span></div><h1>JwtFilter.java</h1><pre class="source lang-java linenums">package com.example.ebookreader.config;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ebookreader-backend</a> &gt; <a href="index.source.html" class="el_package">com.example.ebookreader.config</a> &gt; <span class="el_source">JwtFilter.java</span></div><h1>JwtFilter.java</h1><pre class="source lang-java linenums">package com.example.ebookreader.config;
 
 import java.io.IOException;
 
@@ -22,10 +22,10 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
 
-<span class="fc" id="L25">    public JwtFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {</span>
-<span class="fc" id="L26">        this.jwtUtil = jwtUtil;</span>
-<span class="fc" id="L27">        this.userDetailsService = userDetailsService;</span>
-<span class="fc" id="L28">    }</span>
+<span class="nc" id="L25">    public JwtFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {</span>
+<span class="nc" id="L26">        this.jwtUtil = jwtUtil;</span>
+<span class="nc" id="L27">        this.userDetailsService = userDetailsService;</span>
+<span class="nc" id="L28">    }</span>
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -33,16 +33,16 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
         
-<span class="fc" id="L36">        String path = request.getRequestURI();</span>
+<span class="nc" id="L36">        String path = request.getRequestURI();</span>
         
-<span class="fc" id="L38">        System.out.println(&quot;\n═══════════════════════════════════════&quot;);</span>
-<span class="fc" id="L39">        System.out.println(&quot;🔹 JWT FILTER - REQUEST&quot;);</span>
-<span class="fc" id="L40">        System.out.println(&quot;═══════════════════════════════════════&quot;);</span>
-<span class="fc" id="L41">        System.out.println(&quot;URI: &quot; + path);</span>
-<span class="fc" id="L42">        System.out.println(&quot;Method: &quot; + request.getMethod());</span>
+<span class="nc" id="L38">        System.out.println(&quot;\n═══════════════════════════════════════&quot;);</span>
+<span class="nc" id="L39">        System.out.println(&quot;🔹 JWT FILTER - REQUEST&quot;);</span>
+<span class="nc" id="L40">        System.out.println(&quot;═══════════════════════════════════════&quot;);</span>
+<span class="nc" id="L41">        System.out.println(&quot;URI: &quot; + path);</span>
+<span class="nc" id="L42">        System.out.println(&quot;Method: &quot; + request.getMethod());</span>
         
         // 🔹 Пропускаем JWT фильтр для публичных эндпоинтов, статических файлов и GraphQL
-<span class="pc bpc" id="L45" title="1 of 2 branches missed.">        if (path.startsWith(&quot;/api/auth/&quot;) || </span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (path.startsWith(&quot;/api/auth/&quot;) || </span>
 <span class="nc bnc" id="L46" title="All 2 branches missed.">            path.startsWith(&quot;/api/books&quot;) || </span>
 <span class="nc bnc" id="L47" title="All 2 branches missed.">            path.startsWith(&quot;/api/genres&quot;) ||</span>
 <span class="nc bnc" id="L48" title="All 2 branches missed.">            path.startsWith(&quot;/api/test/&quot;) ||</span>
@@ -51,10 +51,10 @@ public class JwtFilter extends OncePerRequestFilter {
 <span class="nc bnc" id="L51" title="All 2 branches missed.">            path.startsWith(&quot;/graphql&quot;) ||   // ← ДОБАВЛЕНО</span>
 <span class="nc bnc" id="L52" title="All 2 branches missed.">            path.startsWith(&quot;/graphiql&quot;)) {  // ← ДОБАВЛЕНО</span>
             
-<span class="fc" id="L54">            System.out.println(&quot;✅ Публичный ресурс - пропуск JWT фильтра&quot;);</span>
-<span class="fc" id="L55">            System.out.println(&quot;═══════════════════════════════════════\n&quot;);</span>
-<span class="fc" id="L56">            filterChain.doFilter(request, response);</span>
-<span class="fc" id="L57">            return;</span>
+<span class="nc" id="L54">            System.out.println(&quot;✅ Публичный ресурс - пропуск JWT фильтра&quot;);</span>
+<span class="nc" id="L55">            System.out.println(&quot;═══════════════════════════════════════\n&quot;);</span>
+<span class="nc" id="L56">            filterChain.doFilter(request, response);</span>
+<span class="nc" id="L57">            return;</span>
         }
         
 <span class="nc" id="L60">        final String authHeader = request.getHeader(&quot;Authorization&quot;);</span>
