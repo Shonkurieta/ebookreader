@@ -184,11 +184,7 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> with SingleTickerPr
 
   String _getCoverUrl(String? coverUrl) {
     if (coverUrl == null || coverUrl.isEmpty) return '';
-    // Если coverUrl уже полный URL, возвращаем как есть
-    if (coverUrl.startsWith('http')) return coverUrl;
-    // Иначе формируем URL к нашему серверу
-    final baseUrl = ApiConstants.baseUrl.replaceAll('/api', '');
-    return '$baseUrl/api/admin/covers/${coverUrl.split('/').last}';
+    return ApiConstants.getCoverUrl(coverUrl);
   }
 
   @override

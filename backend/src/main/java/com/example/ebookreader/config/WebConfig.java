@@ -19,7 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Раздача обложек через /covers/**
         registry.addResourceHandler("/covers/**")
-                .addResourceLocations("file:/app/assets/covers/")
+                .addResourceLocations("file:./assets/covers/")
                 .setCachePeriod(3600);
         
         // Раздача всех assets через /assets/**

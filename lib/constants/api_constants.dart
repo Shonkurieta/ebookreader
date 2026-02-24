@@ -27,20 +27,13 @@ class ApiConstants {
     // Если это уже полный URL
     if (coverPath.startsWith('http')) return coverPath;
     
-    // Если путь содержит assets/covers, преобразуем его в эндпоинт API
-    if (coverPath.contains('assets/covers/')) {
-      final filename = coverPath.split('/').last;
-      return '$apiBase/api/admin/covers/$filename';
+    // Получаем имя файла
+    String filename = coverPath;
+    if (coverPath.contains('/')) {
+      filename = coverPath.split('/').last;
     }
     
-    // Для путей, которые уже являются именами файлов
-    if (!coverPath.contains('/')) {
-      return '$apiBase/api/admin/covers/$coverPath';
-    }
-
-    if (coverPath.startsWith('/')) {
-      return '$apiBase$coverPath';
-    }
-    return '$apiBase/$coverPath';
+    // Возвращаем прямой путь к статике
+    return '$apiBase/covers/$filename';
   }
 }
