@@ -126,7 +126,7 @@ class AdminService {
     print('📡 [deleteBook] DELETE $url');
     final res = await http.delete(url, headers: headers);
     print('📦 [deleteBook] STATUS: ${res.statusCode}');
-    if (res.statusCode != 200) {
+    if (res.statusCode != 200 && res.statusCode != 204) {
       throw Exception('Ошибка удаления книги: ${res.statusCode}');
     }
   }
@@ -160,7 +160,7 @@ class AdminService {
     print('📡 [deleteUser] DELETE $url');
     final res = await http.delete(url, headers: headers);
     print('📡 [deleteUser] STATUS: ${res.statusCode}');
-    if (res.statusCode != 200) {
+    if (res.statusCode != 200 && res.statusCode != 204) {
       throw Exception('Ошибка удаления пользователя: ${res.statusCode}');
     }
   }
@@ -174,7 +174,7 @@ class AdminService {
     print('📡 [changeUserRole] PUT $url');
     final res = await http.put(url, headers: headers);
     print('📡 [changeUserRole] STATUS: ${res.statusCode}');
-    if (res.statusCode != 200) {
+    if (res.statusCode != 200 && res.statusCode != 204) {
       throw Exception('Ошибка изменения роли: ${res.statusCode}');
     }
   }
