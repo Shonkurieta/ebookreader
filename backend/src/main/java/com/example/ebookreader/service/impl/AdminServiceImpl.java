@@ -74,7 +74,7 @@ public class AdminServiceImpl implements AdminService {
             String fileName = System.currentTimeMillis() + "_" + cover.getOriginalFilename();
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(cover.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            newBook.setCoverUrl("assets/covers/" + fileName);
+            newBook.setCoverUrl(fileName);
         }
 
         return bookRepository.save(newBook);
@@ -106,7 +106,14 @@ public class AdminServiceImpl implements AdminService {
 
         if (book.getCoverUrl() != null && !book.getCoverUrl().isEmpty()) {
             try {
-                Path coverPath = Paths.get(book.getCoverUrl());
+                // Если в БД хранится только имя файла, добавляем путь к папке
+                String coverUrl = book.getCoverUrl();
+                Path coverPath;
+                if (coverUrl.contains("/")) {
+                    coverPath = Paths.get(coverUrl);
+                } else {
+                    coverPath = Paths.get("assets/covers").resolve(coverUrl);
+                }
                 Files.deleteIfExists(coverPath);
             } catch (IOException e) {
                 System.err.println("Could not delete cover file: " + e.getMessage());

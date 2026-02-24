@@ -30,10 +30,10 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 12345
     volumes:
-      - ./backend_assets:/app/assets
+      - ./backend/assets:/app/assets
     depends_on:
       db:
         condition: service_healthy
 
-# Данные теперь сохраняются в локальные папки ./postgres_data и ./backend_assets
+# Данные теперь сохраняются в локальные папки ./postgres_data и ./backend/assets
 # Это гарантирует, что они не пропадут при перезагрузке Docker.
