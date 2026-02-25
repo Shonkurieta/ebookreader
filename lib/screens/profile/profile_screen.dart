@@ -29,6 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   Map<String, dynamic>? _profile;
   bool _isLoading = true;
+  late String _currentToken;
 
   @override
   void initState() {
@@ -46,6 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       curve: Curves.elasticOut,
     );
     _animController.forward();
+    _currentToken = widget.token;
     _loadProfile();
   }
 
@@ -58,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
     try {
-      final profile = await _userService.getProfile(widget.token);
+      final profile = await _userService.getProfile(_currentToken);
       print('Загружен профиль: $profile');
       setState(() {
         _profile = profile;
@@ -182,11 +184,15 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
             try {
               // ✅ Получаем ответ с новым токеном
-              final response = await _userService.updateNickname(widget.token, nickname);
+              final response = await _userService.updateNickname(_currentToken, nickname);
               
               // ✅ Обновляем токен, если он пришел в ответе
               if (response['token'] != null) {
-                await _storage.saveToken(response['token']);
+                final newToken = response['token'];
+                await _storage.saveToken(newToken);
+                setState(() {
+                  _currentToken = newToken;
+                });
                 print('✅ Токен обновлен после смены никнейма');
               }
               

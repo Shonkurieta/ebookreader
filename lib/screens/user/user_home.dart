@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ebookreader/screens/home/home_screen.dart';
 import 'package:ebookreader/screens/profile/profile_screen.dart';
+import 'package:ebookreader/services/storage_service.dart';
 
 /// Корневой экран для обычного пользователя.
 ///
@@ -16,12 +17,29 @@ class UserHome extends StatefulWidget {
 
 class _UserHomeState extends State<UserHome> {
   int _selectedIndex = 0;
+  final StorageService _storage = StorageService();
+  String? _currentToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentToken = widget.token;
+  }
+
+  Future<void> _updateToken() async {
+    final token = await _storage.getToken();
+    if (token != null && token != _currentToken) {
+      setState(() {
+        _currentToken = token;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      HomeScreen(token: widget.token),
-      ProfileScreen(token: widget.token),
+      HomeScreen(token: _currentToken ?? widget.token),
+      ProfileScreen(token: _currentToken ?? widget.token),
     ];
 
     return Scaffold(
@@ -66,7 +84,10 @@ class _UserHomeState extends State<UserHome> {
         ),
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
-          onTap: (index) => setState(() => _selectedIndex = index),
+          onTap: (index) async {
+            await _updateToken();
+            setState(() => _selectedIndex = index);
+          },
           backgroundColor: Colors.transparent,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
