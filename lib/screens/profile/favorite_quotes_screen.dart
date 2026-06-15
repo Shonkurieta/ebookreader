@@ -37,7 +37,7 @@ class _FavoriteQuotesScreenState extends State<FavoriteQuotesScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка загрузки цитат: $e'),
+          content: Text('${context.tr('Ошибка загрузки цитат')}: $e'),
           backgroundColor: context.palette.danger,
         ),
       );
@@ -65,7 +65,7 @@ class _FavoriteQuotesScreenState extends State<FavoriteQuotesScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Любимые цитаты',
+                        context.tr('Любимые цитаты'),
                         style: TextStyle(
                           color: palette.text,
                           fontSize: 28,
@@ -105,7 +105,9 @@ class _FavoriteQuotesScreenState extends State<FavoriteQuotesScreen> {
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'Опубликованные цитаты появятся здесь.',
+                                    context.tr(
+                                      'Опубликованные цитаты появятся здесь.',
+                                    ),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: palette.mutedText,
@@ -166,7 +168,7 @@ class _QuoteProfileCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '${quote.bookTitle} · глава ${quote.chapterOrder}',
+            '${quote.bookTitle} · ${context.chapterLabel(quote.chapterOrder)}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(color: palette.mutedText, fontSize: 12),

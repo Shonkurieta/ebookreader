@@ -47,8 +47,8 @@ class _UserHomeState extends State<UserHome> {
         key: const PageStorageKey('reading-library-home'),
         token: token,
         libraryOnly: true,
-        title: 'Библиотека',
-        subtitle: 'Для чтения и прослушивания',
+        title: context.tr('Библиотека'),
+        subtitle: context.tr('Для чтения и прослушивания'),
       ),
       ProfileScreen(token: token),
     ];
@@ -87,6 +87,10 @@ class _UserHomeState extends State<UserHome> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
+          selectedIconTheme: IconThemeData(color: palette.accent),
+          unselectedIconTheme: IconThemeData(
+            color: palette.mutedText.withValues(alpha: 0.75),
+          ),
           selectedItemColor: palette.accent,
           unselectedItemColor: palette.mutedText.withValues(alpha: 0.75),
           selectedLabelStyle: const TextStyle(
@@ -142,7 +146,7 @@ class _UserHomeState extends State<UserHome> {
                 ),
                 child: const Icon(Icons.auto_awesome, size: 26),
               ),
-              label: 'Для вас',
+              label: context.tr('Для вас'),
             ),
             BottomNavigationBarItem(
               icon: Container(
@@ -187,7 +191,7 @@ class _UserHomeState extends State<UserHome> {
                 ),
                 child: const Icon(Icons.auto_stories, size: 26),
               ),
-              label: 'Библиотека',
+              label: context.tr('Библиотека'),
             ),
             BottomNavigationBarItem(
               icon: Container(
@@ -217,14 +221,14 @@ class _UserHomeState extends State<UserHome> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF14FFEC).withValues(alpha: 0.2),
-                      const Color(0xFF0D7377).withValues(alpha: 0.1),
+                      palette.accent.withValues(alpha: 0.2),
+                      palette.secondaryAccent.withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF14FFEC).withValues(alpha: 0.3),
+                      color: palette.accent.withValues(alpha: 0.3),
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),
@@ -232,7 +236,7 @@ class _UserHomeState extends State<UserHome> {
                 ),
                 child: const Icon(Icons.person, size: 26),
               ),
-              label: 'Профиль',
+              label: context.tr('Профиль'),
             ),
           ],
         ),

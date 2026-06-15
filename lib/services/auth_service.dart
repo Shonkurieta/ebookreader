@@ -106,6 +106,48 @@ class AuthService {
     }
   }
 
+  Future<void> requestPasswordReset(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/password-reset/request'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      );
+
+      if (response.statusCode != 200) {
+        final error = json.decode(response.body);
+        throw Exception(error['message'] ?? 'Не удалось отправить код');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> confirmPasswordReset(
+    String email,
+    String code,
+    String newPassword,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/password-reset/confirm'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'email': email,
+          'code': code,
+          'newPassword': newPassword,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final error = json.decode(response.body);
+        throw Exception(error['message'] ?? 'Не удалось изменить пароль');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<bool> testConnection() async {
     try {
       print('Testing connection to: $baseUrl/auth/test');

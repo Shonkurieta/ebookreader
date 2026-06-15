@@ -8,6 +8,21 @@ spring:
       mode: never
       continue-on-error: true
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          starttls:
+            enable: false
+
   jpa:
     defer-datasource-initialization: true
     hibernate:
@@ -25,3 +40,10 @@ spring:
 
 server:
   port: 8080
+
+ebookreader:
+  mail:
+    from: ${MAIL_FROM:${MAIL_USERNAME:}}
+  password-reset:
+    code-ttl-minutes: 15
+    max-attempts: 5

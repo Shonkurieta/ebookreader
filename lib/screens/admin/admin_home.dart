@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ebookreader/screens/admin/manage_books_screen.dart';
 import 'package:ebookreader/screens/admin/manage_users_screen.dart';
 import 'package:ebookreader/screens/profile/profile_screen.dart';
+import 'package:ebookreader/theme/app_theme.dart';
 
 /// Корневой экран панели администратора.
 ///
@@ -17,7 +18,8 @@ class AdminHome extends StatefulWidget {
   State<AdminHome> createState() => _AdminHomeState();
 }
 
-class _AdminHomeState extends State<AdminHome> with SingleTickerProviderStateMixin {
+class _AdminHomeState extends State<AdminHome>
+    with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _animController;
   late List<Widget> _screens;
@@ -105,17 +107,17 @@ class _AdminHomeState extends State<AdminHome> with SingleTickerProviderStateMix
               children: [
                 _buildNavItem(
                   icon: Icons.auto_stories_rounded,
-                  label: 'Книги',
+                  label: context.tr('Книги'),
                   index: 0,
                 ),
                 _buildNavItem(
                   icon: Icons.people_rounded,
-                  label: 'Пользователи',
+                  label: context.tr('Пользователи'),
                   index: 1,
                 ),
                 _buildNavItem(
                   icon: Icons.person_rounded,
-                  label: 'Профиль',
+                  label: context.tr('Профиль'),
                   index: 2,
                 ),
               ],
@@ -148,8 +150,12 @@ class _AdminHomeState extends State<AdminHome> with SingleTickerProviderStateMix
                 gradient: value > 0
                     ? LinearGradient(
                         colors: [
-                          const Color(0xFF14FFEC).withValues(alpha: 0.25 * value),
-                          const Color(0xFF0D7377).withValues(alpha: 0.15 * value),
+                          const Color(
+                            0xFF14FFEC,
+                          ).withValues(alpha: 0.25 * value),
+                          const Color(
+                            0xFF0D7377,
+                          ).withValues(alpha: 0.15 * value),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -165,7 +171,9 @@ class _AdminHomeState extends State<AdminHome> with SingleTickerProviderStateMix
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFF14FFEC).withValues(alpha: 0.3 * value),
+                          color: const Color(
+                            0xFF14FFEC,
+                          ).withValues(alpha: 0.3 * value),
                           blurRadius: 12 * value,
                           spreadRadius: 2 * value,
                         ),
@@ -185,8 +193,12 @@ class _AdminHomeState extends State<AdminHome> with SingleTickerProviderStateMix
                         gradient: value > 0
                             ? LinearGradient(
                                 colors: [
-                                  const Color(0xFF14FFEC).withValues(alpha: 0.3 * value),
-                                  const Color(0xFF0D7377).withValues(alpha: 0.2 * value),
+                                  const Color(
+                                    0xFF14FFEC,
+                                  ).withValues(alpha: 0.3 * value),
+                                  const Color(
+                                    0xFF0D7377,
+                                  ).withValues(alpha: 0.2 * value),
                                 ],
                               )
                             : null,
@@ -213,7 +225,9 @@ class _AdminHomeState extends State<AdminHome> with SingleTickerProviderStateMix
                         value,
                       ),
                       fontSize: 11,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -231,7 +245,9 @@ class _AdminHomeState extends State<AdminHome> with SingleTickerProviderStateMix
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: const Color(0xFF14FFEC).withValues(alpha: 0.5),
+                                color: const Color(
+                                  0xFF14FFEC,
+                                ).withValues(alpha: 0.5),
                                 blurRadius: 6,
                               ),
                             ]

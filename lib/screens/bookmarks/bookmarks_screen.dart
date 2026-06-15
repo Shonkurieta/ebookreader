@@ -62,7 +62,11 @@ class _BookmarksScreenState extends State<BookmarksScreen>
               children: [
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 12),
-                Expanded(child: Text('Ошибка загрузки сохранённых книг: $e')),
+                Expanded(
+                  child: Text(
+                    '${context.tr('Ошибка загрузки сохранённых книг', en: 'Saved books loading error')}: $e',
+                  ),
+                ),
               ],
             ),
             backgroundColor: Colors.red.shade600,
@@ -83,11 +87,11 @@ class _BookmarksScreenState extends State<BookmarksScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 12),
-                Text('Удалено из сохранённых'),
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(context.tr('Удалено из сохранённых')),
               ],
             ),
             backgroundColor: Colors.green.shade600,
@@ -100,9 +104,9 @@ class _BookmarksScreenState extends State<BookmarksScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${context.tr('Ошибка', en: 'Error')}: $e')),
+        );
       }
     }
   }
@@ -118,7 +122,7 @@ class _BookmarksScreenState extends State<BookmarksScreen>
 
   void _resumeBook(Map<String, dynamic> bookmark) {
     final bookId = bookmark['id'] as int;
-    final title = bookmark['title']?.toString() ?? 'Без названия';
+    final title = bookmark['title']?.toString() ?? context.tr('Без названия');
     final author = bookmark['author']?.toString() ?? '';
     final chapter = _asInt(
       bookmark['segmentOrder'] ?? bookmark['currentChapter'] ?? 1,
@@ -208,7 +212,7 @@ class _BookmarksScreenState extends State<BookmarksScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Сохранённые книги',
+                            context.tr('Сохранённые книги'),
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
@@ -217,7 +221,7 @@ class _BookmarksScreenState extends State<BookmarksScreen>
                             ),
                           ),
                           Text(
-                            'Книги, к которым вы хотите вернуться',
+                            context.tr('Книги, к которым вы хотите вернуться'),
                             style: TextStyle(
                               fontSize: 14,
                               color: palette.mutedText,
@@ -297,7 +301,7 @@ class _BookmarksScreenState extends State<BookmarksScreen>
           ),
           const SizedBox(height: 24),
           Text(
-            'Нет сохранённых книг',
+            context.tr('Нет сохранённых книг'),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -308,7 +312,9 @@ class _BookmarksScreenState extends State<BookmarksScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Здесь будут отображаться книги, которые вы сохранили для чтения',
+              context.tr(
+                'Здесь будут отображаться книги, которые вы сохранили для чтения',
+              ),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -346,8 +352,9 @@ class _BookmarksScreenState extends State<BookmarksScreen>
 
   Widget _buildBookmarkCard(Map<String, dynamic> bookmark) {
     final bookId = bookmark['id'] as int;
-    final title = (bookmark['title'] ?? 'Без названия').toString();
-    final author = (bookmark['author'] ?? 'Неизвестный автор').toString();
+    final title = (bookmark['title'] ?? context.tr('Без названия')).toString();
+    final author = (bookmark['author'] ?? context.tr('Неизвестный автор'))
+        .toString();
     final coverUrl = bookmark['coverUrl'];
     final currentChapter =
         bookmark['segmentOrder'] ?? bookmark['currentChapter'] ?? 1;
@@ -495,7 +502,7 @@ class _BookmarksScreenState extends State<BookmarksScreen>
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
-                    'Глава $currentChapter • ${(progress * 100).round()}%',
+                    '${context.chapterLabel(currentChapter)} • ${(progress * 100).round()}%',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -524,14 +531,14 @@ class _BookmarksScreenState extends State<BookmarksScreen>
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           _buildActionButton(
-            tooltip: 'Продолжить',
+            tooltip: context.tr('Продолжить'),
             color: const Color(0xFF14FFEC),
             icon: Icons.play_arrow_rounded,
             onPressed: () => _resumeBook(bookmark),
           ),
           const SizedBox(width: 8),
           _buildActionButton(
-            tooltip: 'Убрать из сохранённых',
+            tooltip: context.tr('Убрать из сохранённых'),
             color: Colors.redAccent,
             icon: Icons.library_add_check_rounded,
             onPressed: () => _confirmRemoveBookmark(bookId, title),
@@ -580,19 +587,21 @@ class _BookmarksScreenState extends State<BookmarksScreen>
             width: 1.5,
           ),
         ),
-        title: const Text(
-          'Убрать из сохранённых?',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          context.tr('Убрать из сохранённых?'),
+          style: const TextStyle(color: Colors.white),
         ),
         content: Text(
-          'Вы уверены, что хотите убрать "$title" из сохранённых книг?',
+          context.appLanguage.isEnglish
+              ? 'Remove "$title" from saved books?'
+              : 'Вы уверены, что хотите убрать "$title" из сохранённых книг?',
           style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Отмена',
+              context.tr('Отмена'),
               style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
             ),
           ),
@@ -612,7 +621,7 @@ class _BookmarksScreenState extends State<BookmarksScreen>
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
               ),
-              child: const Text('Удалить'),
+              child: Text(context.tr('Удалить')),
             ),
           ),
         ],

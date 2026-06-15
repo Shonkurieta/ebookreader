@@ -1,3 +1,4 @@
+import 'package:ebookreader/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Экран загрузки приложения.
@@ -16,17 +17,18 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/login');
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: Text(
-          'Ваша электронная библиотека',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+          context.tr('Ваша электронная библиотека'),
+          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
         ),
       ),
     );

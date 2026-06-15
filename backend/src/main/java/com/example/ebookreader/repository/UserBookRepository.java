@@ -25,6 +25,12 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
     List<UserBook> findRatedByUserIdOrderByRatingDateDesc(@Param("userId") Long userId);
     @Query("select ub from UserBook ub join fetch ub.user where ub.book.id = :bookId and ub.reviewText is not null and trim(ub.reviewText) <> '' order by coalesce(ub.reviewUpdatedAt, ub.reviewCreatedAt, ub.ratedAt) desc")
     List<UserBook> findReviewsByBookId(@Param("bookId") Long bookId);
+    @Query("select count(ub) from UserBook ub where ub.book.id = :bookId and ub.rating is not null")
+    long countRatingsByBookId(@Param("bookId") Long bookId);
+    @Query("select avg(ub.rating) from UserBook ub where ub.book.id = :bookId and ub.rating is not null")
+    Double averageRatingByBookId(@Param("bookId") Long bookId);
+    @Query("select count(ub) from UserBook ub where ub.book.id = :bookId and ub.reviewText is not null and trim(ub.reviewText) <> ''")
+    long countReviewsByBookId(@Param("bookId") Long bookId);
     @Query("select ub from UserBook ub join fetch ub.book where ub.user.id = :userId")
     List<UserBook> findByUserIdWithBook(@Param("userId") Long userId);
     List<UserBook> findByUserId(Long userId);

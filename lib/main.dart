@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:ebookreader/screens/admin/admin_main_screen.dart';
 import 'package:ebookreader/theme/app_theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +38,7 @@ class _MyAppState extends State<MyApp> {
   String? role;
   bool isLoading = true;
   final AppThemeController _themeController = AppThemeController();
+  final AppLanguageController _languageController = AppLanguageController();
 
   @override
   void initState() {
@@ -46,6 +49,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _themeController.dispose();
+    _languageController.dispose();
     super.dispose();
   }
 
@@ -64,6 +68,7 @@ class _MyAppState extends State<MyApp> {
     }
 
     await _themeController.load();
+    await _languageController.load();
 
     setState(() {
       token = savedToken;
@@ -95,9 +100,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const MaterialApp(
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
-      );
+      return const MaterialApp(home: _StartupLoadingScreen());
     }
 
     Widget startScreen;
@@ -113,30 +116,152 @@ class _MyAppState extends State<MyApp> {
     }
 
     return AnimatedBuilder(
-      animation: _themeController,
+      animation: Listenable.merge([_themeController, _languageController]),
       builder: (context, _) {
         final palette = _themeController.palette;
         return AppThemeScope(
           controller: _themeController,
-          child: MaterialApp(
-            title: 'EBook Reader',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.themeData(palette),
-            builder: (context, child) =>
-                _KeyboardDismissScope(child: child ?? const SizedBox.shrink()),
-            home: startScreen,
-            routes: {
-              '/login': (_) => const LoginScreen(),
-              '/register': (_) => const RegisterScreen(),
-              '/home': (_) => HomeScreen(token: token ?? ''),
-              '/admin': (_) => AdminMainScreen(token: token ?? ''),
-              '/bookmarks': (_) => BookmarksScreen(token: token ?? ''),
-            },
+          child: AppLanguageScope(
+            controller: _languageController,
+            child: MaterialApp(
+              title: 'EBook Reader',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.themeData(palette),
+              builder: (context, child) => _KeyboardWarmupGate(
+                child: _KeyboardDismissScope(
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
+              home: startScreen,
+              routes: {
+                '/login': (_) => const LoginScreen(),
+                '/register': (_) => const RegisterScreen(),
+                '/home': (_) => HomeScreen(token: token ?? ''),
+                '/admin': (_) => AdminMainScreen(token: token ?? ''),
+                '/bookmarks': (_) => BookmarksScreen(token: token ?? ''),
+              },
+            ),
           ),
         );
       },
     );
   }
+}
+
+class _StartupLoadingScreen extends StatelessWidget {
+  final String message;
+
+  const _StartupLoadingScreen({this.message = 'Loading...'});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(message),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _KeyboardWarmupGate extends StatefulWidget {
+  final Widget child;
+
+  const _KeyboardWarmupGate({required this.child});
+
+  @override
+  State<_KeyboardWarmupGate> createState() => _KeyboardWarmupGateState();
+}
+
+class _KeyboardWarmupGateState extends State<_KeyboardWarmupGate> {
+  final FocusNode _focusNode = FocusNode(debugLabel: 'keyboard-warmup');
+  final TextEditingController _controller = TextEditingController();
+  bool _isWarmed = !_shouldWarmKeyboard;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_shouldWarmKeyboard) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _warmKeyboard());
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _warmKeyboard() async {
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      if (!mounted) return;
+
+      _focusNode.requestFocus();
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
+
+      _focusNode.unfocus();
+      await SystemChannels.textInput
+          .invokeMethod<void>('TextInput.hide')
+          .timeout(const Duration(milliseconds: 300), onTimeout: () {});
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+    } catch (_) {
+      _focusNode.unfocus();
+    } finally {
+      if (mounted) {
+        setState(() => _isWarmed = true);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        widget.child,
+        Positioned(
+          left: -200,
+          top: -200,
+          width: 1,
+          height: 1,
+          child: IgnorePointer(
+            child: EditableText(
+              controller: _controller,
+              focusNode: _focusNode,
+              style: const TextStyle(fontSize: 1, color: Colors.transparent),
+              cursorColor: Colors.transparent,
+              backgroundCursorColor: Colors.transparent,
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.done,
+            ),
+          ),
+        ),
+        if (!_isWarmed)
+          Positioned.fill(
+            child: _StartupLoadingScreen(
+              message: context.tr(
+                'Подготавливаем клавиатуру...',
+                en: 'Preparing keyboard...',
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+bool get _shouldWarmKeyboard {
+  if (kIsWeb) return false;
+  return defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
 }
 
 class _KeyboardDismissScope extends StatelessWidget {

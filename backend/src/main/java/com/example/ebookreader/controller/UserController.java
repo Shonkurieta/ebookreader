@@ -54,30 +54,7 @@ public class UserController {
         profile.put("nickname", user.getNickname());
         profile.put("role", user.getRole());
         profile.put("authProvider", user.getAuthProvider());
-        profile.put("audioSubscriptionActive", user.isAudioSubscriptionActive());
         return ResponseEntity.ok(profile);
-    }
-
-    @PutMapping("/audio-subscription")
-    public ResponseEntity<?> updateAudioSubscription(
-            @RequestHeader("Authorization") String token,
-            @RequestBody Map<String, Boolean> request) {
-        String identifier = jwtUtil.extractUsername(token.replace("Bearer ", ""));
-        User user = userRepository.findByNickname(identifier)
-                .orElseGet(() -> userRepository.findByEmail(identifier).orElse(null));
-
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        boolean active = Boolean.TRUE.equals(request.get("active"));
-        user.setAudioSubscriptionActive(active);
-        userRepository.save(user);
-
-        return ResponseEntity.ok(Map.of(
-                "message", active ? "Подписка на аудиокниги активирована" : "Подписка на аудиокниги отключена",
-                "audioSubscriptionActive", user.isAudioSubscriptionActive()
-        ));
     }
 
     @PutMapping("/nickname")

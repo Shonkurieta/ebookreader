@@ -1,6 +1,7 @@
 package com.example.ebookreader.service.impl;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -306,11 +307,18 @@ public class AdminServiceImpl implements AdminService {
     public Resource getAudioTrackResource(Long bookId, Long trackId) throws IOException {
         AudioTrack track = audioTrackRepository.findByIdAndBookId(trackId, bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Аудиотрек не найден"));
-        Resource resource = new UrlResource(Paths.get(track.getAudioPath()).toUri());
+        Resource resource = isRemoteUrl(track.getAudioPath())
+                ? new UrlResource(URI.create(track.getAudioPath()))
+                : new UrlResource(Paths.get(track.getAudioPath()).toUri());
         if (resource.exists() && resource.isReadable()) {
             return resource;
         }
         throw new ResourceNotFoundException("Аудиофайл не найден: " + track.getAudioPath());
+    }
+
+    private boolean isRemoteUrl(String value) {
+        return value != null
+                && (value.startsWith("https://") || value.startsWith("http://"));
     }
 
     private void updateAvailabilityFromAssets(Book book) {

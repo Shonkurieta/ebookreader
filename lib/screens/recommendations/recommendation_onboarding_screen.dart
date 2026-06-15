@@ -67,7 +67,9 @@ class _RecommendationOnboardingScreenState
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка загрузки книг: $e'),
+          content: Text(
+            '${context.tr('Ошибка загрузки книг', en: 'Books loading error')}: $e',
+          ),
           backgroundColor: context.palette.danger,
         ),
       );
@@ -101,7 +103,11 @@ class _RecommendationOnboardingScreenState
     setState(() => _isSaving = true);
     try {
       for (final book in _selected.values) {
-        await _bookmarkService.updateRating(widget.token, _asInt(book['id']), 5);
+        await _bookmarkService.updateRating(
+          widget.token,
+          _asInt(book['id']),
+          5,
+        );
       }
       if (!mounted) return;
       if (widget.finishToHome) {
@@ -117,7 +123,9 @@ class _RecommendationOnboardingScreenState
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка сохранения вкуса: $e'),
+          content: Text(
+            '${context.tr('Ошибка сохранения вкуса', en: 'Preference saving error')}: $e',
+          ),
           backgroundColor: context.palette.danger,
         ),
       );
@@ -155,7 +163,9 @@ class _RecommendationOnboardingScreenState
               _buildSelectionBar(),
               Expanded(
                 child: _isLoading
-                    ? Center(child: CircularProgressIndicator(color: palette.accent))
+                    ? Center(
+                        child: CircularProgressIndicator(color: palette.accent),
+                      )
                     : _buildGrid(),
               ),
             ],
@@ -176,7 +186,9 @@ class _RecommendationOnboardingScreenState
                 : const Icon(Icons.auto_awesome_rounded),
             label: Text(
               _selected.length >= 3
-                  ? 'Показать рекомендации'
+                  ? context.tr('Показать рекомендации')
+                  : context.appLanguage.isEnglish
+                  ? 'Choose ${3 - _selected.length} more'
                   : 'Выберите ещё ${3 - _selected.length}',
             ),
           ),
@@ -201,7 +213,7 @@ class _RecommendationOnboardingScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Выберите любимые книги',
+                  context.tr('Выберите любимые книги'),
                   style: TextStyle(
                     color: palette.text,
                     fontSize: 24,
@@ -209,7 +221,7 @@ class _RecommendationOnboardingScreenState
                   ),
                 ),
                 Text(
-                  'От 3 до 10 книг, рейтинг будет сохранён как 5★',
+                  context.tr('От 3 до 10 книг, рейтинг будет сохранён как 5★'),
                   style: TextStyle(color: palette.mutedText, fontSize: 13),
                 ),
               ],
@@ -229,7 +241,7 @@ class _RecommendationOnboardingScreenState
         onSubmitted: (value) => _loadBooks(query: value),
         style: TextStyle(color: palette.text),
         decoration: InputDecoration(
-          hintText: 'Поиск любимой книги',
+          hintText: context.tr('Поиск любимой книги'),
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: IconButton(
             onPressed: () => _loadBooks(query: _searchController.text),
@@ -258,13 +270,16 @@ class _RecommendationOnboardingScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Выбрано: ${_selected.length}/10',
-            style: TextStyle(color: palette.accent, fontWeight: FontWeight.w700),
+            '${context.tr('Выбрано')}: ${_selected.length}/10',
+            style: TextStyle(
+              color: palette.accent,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           if (_preview.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              'Уже вижу: $previewTitles',
+              '${context.tr('Уже вижу')}: $previewTitles',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: palette.mutedText, fontSize: 12),
@@ -303,7 +318,9 @@ class _RecommendationOnboardingScreenState
               color: context.palette.elevated.withValues(alpha: 0.78),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: selected ? context.palette.accent : context.palette.border,
+                color: selected
+                    ? context.palette.accent
+                    : context.palette.border,
                 width: selected ? 2 : 1,
               ),
             ),
@@ -312,7 +329,9 @@ class _RecommendationOnboardingScreenState
               children: [
                 Expanded(
                   child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(18),
+                    ),
                     child: _cover(book),
                   ),
                 ),
@@ -322,7 +341,7 @@ class _RecommendationOnboardingScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        book['title']?.toString() ?? 'Без названия',
+                        book['title']?.toString() ?? context.tr('Без названия'),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

@@ -71,7 +71,8 @@ class _RegisterScreenState extends State<RegisterScreen>
       final token = response['token']?.toString() ?? '';
       final role = response['role']?.toString() ?? 'USER';
 
-      if (token.isEmpty) throw Exception('Токен не получен от сервера');
+      if (token.isEmpty)
+        throw Exception(context.tr('Токен не получен от сервера'));
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
@@ -81,10 +82,8 @@ class _RegisterScreenState extends State<RegisterScreen>
 
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (_) => RecommendationOnboardingScreen(
-            token: token,
-            finishToHome: true,
-          ),
+          builder: (_) =>
+              RecommendationOnboardingScreen(token: token, finishToHome: true),
         ),
         (route) => false,
       );
@@ -98,7 +97,11 @@ class _RegisterScreenState extends State<RegisterScreen>
             children: [
               const Icon(Icons.error_outline, color: Colors.white),
               const SizedBox(width: 12),
-              Expanded(child: Text('Ошибка регистрации: ${e.toString()}')),
+              Expanded(
+                child: Text(
+                  '${context.tr('Ошибка регистрации')}: ${e.toString()}',
+                ),
+              ),
             ],
           ),
           backgroundColor: Colors.red.shade600,
@@ -125,10 +128,20 @@ class _RegisterScreenState extends State<RegisterScreen>
               Positioned(
                 top: 8,
                 right: 12,
-                child: IconButton(
-                  tooltip: 'Тема приложения',
-                  onPressed: () => showAppThemeSheet(context),
-                  icon: Icon(Icons.palette_rounded, color: palette.accent),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: context.tr('Тема приложения'),
+                      onPressed: () => showAppThemeSheet(context),
+                      icon: Icon(Icons.palette_rounded, color: palette.accent),
+                    ),
+                    IconButton(
+                      tooltip: context.tr('Язык интерфейса'),
+                      onPressed: () => showAppLanguageSheet(context),
+                      icon: Icon(Icons.language_rounded, color: palette.accent),
+                    ),
+                  ],
                 ),
               ),
               Center(
@@ -192,7 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                             shaderCallback: (bounds) =>
                                 palette.accentGradient.createShader(bounds),
                             child: Text(
-                              'Регистрация',
+                              context.tr('Регистрация'),
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
@@ -205,7 +218,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                           const SizedBox(height: 8),
 
                           Text(
-                            'Присоединяйтесь к нашему сообществу читателей',
+                            context.tr(
+                              'Присоединяйтесь к нашему сообществу читателей',
+                            ),
                             style: TextStyle(
                               fontSize: 15,
                               color: palette.mutedText,
@@ -217,14 +232,14 @@ class _RegisterScreenState extends State<RegisterScreen>
                           // Username field
                           _buildGlassTextField(
                             controller: _usernameController,
-                            label: 'Логин',
+                            label: context.tr('Логин'),
                             icon: Icons.person_outline,
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Введите логин';
+                                return context.tr('Введите логин');
                               }
                               if (value.trim().length < 3) {
-                                return 'Минимум 3 символа';
+                                return context.tr('Минимум 3 символа');
                               }
                               return null;
                             },
@@ -240,10 +255,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Введите email';
+                                return context.tr('Введите email');
                               }
                               if (!value.trim().contains('@')) {
-                                return 'Введите корректный email';
+                                return context.tr('Введите корректный email');
                               }
                               return null;
                             },
@@ -254,7 +269,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                           // Password field
                           _buildGlassTextField(
                             controller: _passwordController,
-                            label: 'Пароль',
+                            label: context.tr('Пароль'),
                             icon: Icons.lock_outline,
                             obscureText: _obscurePassword,
                             suffixIcon: IconButton(
@@ -270,10 +285,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Введите пароль';
+                                return context.tr('Введите пароль');
                               }
                               if (value.trim().length < 8) {
-                                return 'Минимум 8 символов';
+                                return context.tr('Минимум 8 символов');
                               }
                               return null;
                             },
@@ -284,7 +299,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                           // Confirm Password field
                           _buildGlassTextField(
                             controller: _confirmPasswordController,
-                            label: 'Подтвердите пароль',
+                            label: context.tr('Подтвердите пароль'),
                             icon: Icons.lock_clock_outlined,
                             obscureText: _obscureConfirmPassword,
                             suffixIcon: IconButton(
@@ -301,11 +316,11 @@ class _RegisterScreenState extends State<RegisterScreen>
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Подтвердите пароль';
+                                return context.tr('Подтвердите пароль');
                               }
                               if (value.trim() !=
                                   _passwordController.text.trim()) {
-                                return 'Пароли не совпадают';
+                                return context.tr('Пароли не совпадают');
                               }
                               return null;
                             },
@@ -350,7 +365,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       ),
                                     )
                                   : Text(
-                                      'Зарегистрироваться',
+                                      context.tr('Зарегистрироваться'),
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
@@ -368,14 +383,14 @@ class _RegisterScreenState extends State<RegisterScreen>
                             onPressed: () => Navigator.pop(context),
                             child: RichText(
                               text: TextSpan(
-                                text: 'Уже есть аккаунт? ',
+                                text: context.tr('Уже есть аккаунт? '),
                                 style: TextStyle(
                                   color: palette.mutedText,
                                   fontSize: 15,
                                 ),
                                 children: [
                                   TextSpan(
-                                    text: 'Войти',
+                                    text: context.tr('Войти'),
                                     style: TextStyle(
                                       color: palette.accent,
                                       fontWeight: FontWeight.w600,
@@ -435,10 +450,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         style: TextStyle(color: palette.text, fontSize: 16),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(
-            color: palette.mutedText,
-            fontSize: 14,
-          ),
+          labelStyle: TextStyle(color: palette.mutedText, fontSize: 14),
           prefixIcon: Icon(icon, color: palette.accent.withValues(alpha: 0.72)),
           suffixIcon: suffixIcon,
           border: InputBorder.none,

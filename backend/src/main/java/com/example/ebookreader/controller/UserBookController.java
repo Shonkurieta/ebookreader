@@ -43,6 +43,7 @@ import com.example.ebookreader.model.User;
 import com.example.ebookreader.model.UserBook;
 import com.example.ebookreader.repository.BookAnnotationRepository;
 import com.example.ebookreader.repository.BookReviewReplyRepository;
+import com.example.ebookreader.repository.BookRepository;
 import com.example.ebookreader.repository.ChapterRepository;
 import com.example.ebookreader.repository.CommunityReactionRepository;
 import com.example.ebookreader.repository.UserBookRepository;
@@ -57,6 +58,9 @@ public class UserBookController {
 
     @Autowired
     private UserBookRepository userBookRepository;
+
+    @Autowired
+    private BookRepository bookRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -91,6 +95,16 @@ public class UserBookController {
     private Optional<User> getUserFromToken(String token) {
         String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
         return userRepository.findByNickname(username);
+    }
+
+    private void refreshBookCommunityStats(Book book) {
+        long ratingsCount = userBookRepository.countRatingsByBookId(book.getId());
+        Double averageRating = userBookRepository.averageRatingByBookId(book.getId());
+        long reviewCount = userBookRepository.countReviewsByBookId(book.getId());
+        book.setRatingsCount(Math.toIntExact(ratingsCount));
+        book.setAverageRating(averageRating == null ? 0.0 : averageRating);
+        book.setReviewCount(Math.toIntExact(reviewCount));
+        bookRepository.save(book);
     }
 
     private UserBook getOrCreateUserBook(User user, Book book) {
@@ -526,6 +540,7 @@ public class UserBookController {
         ub.setLastReadAt(now);
         clearPhantomReadingStatus(ub);
         userBookRepository.save(ub);
+        refreshBookCommunityStats(bookOpt.get());
 
         return ResponseEntity.ok(Map.of(
                 "message", "Оценка сохранена",
@@ -549,6 +564,7 @@ public class UserBookController {
         ub.setLastReadAt(LocalDateTime.now());
         clearPhantomReadingStatus(ub);
         userBookRepository.save(ub);
+        refreshBookCommunityStats(bookOpt.get());
 
         return ResponseEntity.ok(Map.of(
                 "message", "Оценка удалена",
@@ -629,6 +645,7 @@ public class UserBookController {
         ub.setLastReadAt(now);
         clearPhantomReadingStatus(ub);
         UserBook saved = userBookRepository.save(ub);
+        refreshBookCommunityStats(bookOpt.get());
         return ResponseEntity.ok(reviewPayload(saved, List.of(), Map.of(), userOpt.get()));
     }
 

@@ -239,7 +239,7 @@ class _BookReviewsSectionState extends State<BookReviewsSection> {
               padding: const EdgeInsets.symmetric(vertical: 36),
               child: Center(
                 child: Text(
-                  'Пока нет отзывов.',
+                  context.tr('Пока нет отзывов.'),
                   style: TextStyle(color: palette.mutedText),
                 ),
               ),
@@ -312,7 +312,7 @@ class _ReplyComposer extends StatelessWidget {
             textInputAction: TextInputAction.newline,
             style: TextStyle(color: palette.text),
             decoration: InputDecoration(
-              hintText: 'Ваш ответ',
+              hintText: context.tr('Ваш ответ'),
               hintStyle: TextStyle(color: palette.mutedText),
               border: InputBorder.none,
             ),
@@ -323,7 +323,7 @@ class _ReplyComposer extends StatelessWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: isSaving ? null : onCancel,
-                  child: const Text('Отмена'),
+                  child: Text(context.tr('Отмена')),
                 ),
               ),
               const SizedBox(width: 10),
@@ -336,7 +336,7 @@ class _ReplyComposer extends StatelessWidget {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Опубликовать'),
+                      : Text(context.tr('Опубликовать')),
                 ),
               ),
             ],
@@ -406,7 +406,7 @@ class _ReviewComposer extends StatelessWidget {
             textInputAction: TextInputAction.newline,
             style: TextStyle(color: palette.text),
             decoration: InputDecoration(
-              hintText: 'Напишите отзыв',
+              hintText: context.tr('Напишите отзыв'),
               hintStyle: TextStyle(color: palette.mutedText),
               border: InputBorder.none,
             ),
@@ -418,7 +418,7 @@ class _ReviewComposer extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: isSaving ? null : onCancel,
-                    child: const Text('Отмена'),
+                    child: Text(context.tr('Отмена')),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -432,7 +432,11 @@ class _ReviewComposer extends StatelessWidget {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(isEditing ? 'Сохранить' : 'Опубликовать'),
+                      : Text(
+                          isEditing
+                              ? context.tr('Сохранить')
+                              : context.tr('Опубликовать'),
+                        ),
                 ),
               ),
             ],
@@ -614,14 +618,17 @@ class _ActionsRow extends StatelessWidget {
         TextButton.icon(
           onPressed: onReply,
           icon: Icon(Icons.reply_rounded, size: 18, color: palette.mutedText),
-          label: Text('Ответить', style: TextStyle(color: palette.mutedText)),
+          label: Text(
+            context.tr('Ответить'),
+            style: TextStyle(color: palette.mutedText),
+          ),
         ),
         if (onEdit != null)
           TextButton.icon(
             onPressed: onEdit,
             icon: Icon(Icons.edit_rounded, size: 18, color: palette.mutedText),
             label: Text(
-              'Редактировать',
+              context.tr('Редактировать'),
               style: TextStyle(color: palette.mutedText),
             ),
           ),
@@ -699,7 +706,7 @@ class _ExpandableTextState extends State<_ExpandableText> {
           TextButton(
             onPressed: () => setState(() => _expanded = !_expanded),
             child: Text(
-              _expanded ? 'Скрыть' : 'Показать больше',
+              _expanded ? context.tr('Скрыть') : context.tr('Показать больше'),
               style: TextStyle(color: palette.accent),
             ),
           ),
@@ -776,7 +783,7 @@ class _BookQuotesSectionState extends State<BookQuotesSection> {
         padding: const EdgeInsets.symmetric(vertical: 36),
         child: Center(
           child: Text(
-            'Пока нет опубликованных цитат.',
+            context.tr('Пока нет опубликованных цитат.'),
             style: TextStyle(color: palette.mutedText),
           ),
         ),
@@ -834,7 +841,7 @@ class _QuoteCardState extends State<_QuoteCard> {
             if (_showDetails) ...[
               const SizedBox(height: 10),
               Text(
-                'Глава ${quote.chapterOrder} · опубликовано пользователем ${quote.nickname}',
+                '${context.chapterLabel(quote.chapterOrder)} · ${context.tr('опубликовано пользователем')} ${quote.nickname}',
                 style: TextStyle(color: palette.mutedText, fontSize: 12),
               ),
             ],

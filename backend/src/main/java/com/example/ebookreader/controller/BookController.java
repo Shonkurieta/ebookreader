@@ -43,11 +43,6 @@ import com.example.ebookreader.service.BookService; // Импортируем с
 @CrossOrigin(origins = "*")
 public class BookController {
 
-    private static final Set<String> PUBLIC_DOMAIN_AUDIO_GOODREADS_IDS = Set.of(
-            "269322",
-            "pg-ru-21183"
-    );
-
     private final BookService bookService; // Используем сервис
     private final AdminService adminService;
     private final UserBookRepository userBookRepository;
@@ -286,23 +281,7 @@ public class BookController {
     }
 
     private void assertAudioAccess(String token, Long bookId) {
-        if (isPublicDomainAudiobook(bookId)) {
-            assertAuthenticated(token);
-            return;
-        }
-
-        var user = authenticatedUser(token);
-        boolean hasAccess = "ADMIN".equalsIgnoreCase(user.getRole()) || user.isAudioSubscriptionActive();
-        if (!hasAccess) {
-            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "Для прослушивания нужна аудиоподписка");
-        }
-    }
-
-    private boolean isPublicDomainAudiobook(Long bookId) {
-        return bookService.getBookById(bookId)
-                .map(Book::getGoodreadsId)
-                .map(PUBLIC_DOMAIN_AUDIO_GOODREADS_IDS::contains)
-                .orElse(false);
+        authenticatedUser(token);
     }
 
     private void assertAuthenticated(String token) {

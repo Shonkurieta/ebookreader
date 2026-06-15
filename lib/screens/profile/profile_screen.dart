@@ -75,7 +75,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Ошибка загрузки профиля: $e'),
+            content: Text(
+              '${context.tr('Ошибка загрузки профиля', en: 'Profile loading error')}: $e',
+            ),
             backgroundColor: Colors.red.shade600,
           ),
         );
@@ -91,17 +93,20 @@ class _ProfileScreenState extends State<ProfileScreen>
         backgroundColor: palette.elevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Выход из системы',
+          context.tr('Выход из системы'),
           style: TextStyle(color: palette.text, fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'Вы действительно хотите выйти из своего аккаунта?',
+          context.tr('Вы действительно хотите выйти из своего аккаунта?'),
           style: TextStyle(color: palette.text.withValues(alpha: 0.8)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Отмена', style: TextStyle(color: palette.mutedText)),
+            child: Text(
+              context.tr('Отмена'),
+              style: TextStyle(color: palette.mutedText),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -119,7 +124,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Выйти', style: TextStyle(color: Colors.white)),
+            child: Text(
+              context.tr('Выйти'),
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -136,14 +144,14 @@ class _ProfileScreenState extends State<ProfileScreen>
         backgroundColor: palette.elevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Смена имени пользователя',
+          context.tr('Смена имени пользователя'),
           style: TextStyle(color: palette.text, fontWeight: FontWeight.bold),
         ),
         content: TextField(
           controller: controller,
           style: TextStyle(color: palette.text),
           decoration: InputDecoration(
-            labelText: 'Введите новое имя',
+            labelText: context.tr('Введите новое имя'),
             labelStyle: TextStyle(color: palette.mutedText),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -159,7 +167,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Отмена', style: TextStyle(color: palette.mutedText)),
+            child: Text(
+              context.tr('Отмена'),
+              style: TextStyle(color: palette.mutedText),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -167,7 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               if (nickname.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('Никнейм не может быть пустым'),
+                    content: Text(context.tr('Никнейм не может быть пустым')),
                     backgroundColor: Colors.red.shade600,
                   ),
                 );
@@ -196,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 _loadProfile();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('Никнейм успешно обновлён'),
+                    content: Text(context.tr('Никнейм успешно обновлён')),
                     backgroundColor: Colors.green.shade600,
                   ),
                 );
@@ -204,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Ошибка: $e'),
+                    content: Text('${context.tr('Ошибка', en: 'Error')}: $e'),
                     backgroundColor: Colors.red.shade600,
                   ),
                 );
@@ -217,7 +228,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Сохранить'),
+            child: Text(context.tr('Сохранить')),
           ),
         ],
       ),
@@ -242,7 +253,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             borderRadius: BorderRadius.circular(20),
           ),
           title: Text(
-            'Изменить пароль',
+            context.tr('Изменить пароль'),
             style: TextStyle(color: palette.text, fontWeight: FontWeight.bold),
           ),
           content: SingleChildScrollView(
@@ -254,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   obscureText: obscureOld,
                   style: TextStyle(color: palette.text),
                   decoration: InputDecoration(
-                    labelText: 'Старый пароль',
+                    labelText: context.tr('Старый пароль'),
                     labelStyle: TextStyle(color: palette.mutedText),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -279,9 +290,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                   obscureText: obscureNew,
                   style: TextStyle(color: palette.text),
                   decoration: InputDecoration(
-                    labelText: 'Новый пароль',
+                    labelText: context.tr('Новый пароль'),
                     labelStyle: TextStyle(color: palette.mutedText),
-                    helperText: 'Минимум 8 символов',
+                    helperText: context.tr('Минимум 8 символов'),
                     helperStyle: TextStyle(color: palette.mutedText),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -306,7 +317,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   obscureText: obscureConfirm,
                   style: TextStyle(color: palette.text),
                   decoration: InputDecoration(
-                    labelText: 'Подтвердите пароль',
+                    labelText: context.tr('Подтвердите пароль'),
                     labelStyle: TextStyle(color: palette.mutedText),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -334,7 +345,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Отмена', style: TextStyle(color: palette.mutedText)),
+              child: Text(
+                context.tr('Отмена'),
+                style: TextStyle(color: palette.mutedText),
+              ),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -347,7 +361,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     confirmPassword.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Все поля должны быть заполнены'),
+                      content: Text(
+                        context.tr('Все поля должны быть заполнены'),
+                      ),
                       backgroundColor: Colors.red.shade600,
                     ),
                   );
@@ -357,8 +373,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 if (newPassword.length < 8) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text(
-                        'Пароль должен содержать минимум 8 символов',
+                      content: Text(
+                        context.tr(
+                          'Пароль должен содержать минимум 8 символов',
+                        ),
                       ),
                       backgroundColor: Colors.red.shade600,
                     ),
@@ -369,7 +387,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 if (newPassword != confirmPassword) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Пароли не совпадают'),
+                      content: Text(context.tr('Пароли не совпадают')),
                       backgroundColor: Colors.red.shade600,
                     ),
                   );
@@ -378,7 +396,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                 try {
                   await _userService.changePassword(
-                    widget.token,
+                    _currentToken,
                     oldPassword,
                     newPassword,
                   );
@@ -386,7 +404,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Пароль успешно изменён'),
+                      content: Text(context.tr('Пароль успешно изменён')),
                       backgroundColor: Colors.green.shade600,
                     ),
                   );
@@ -394,7 +412,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Ошибка: $e'),
+                      content: Text('${context.tr('Ошибка', en: 'Error')}: $e'),
                       backgroundColor: Colors.red.shade600,
                     ),
                   );
@@ -407,7 +425,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Изменить'),
+              child: Text(context.tr('Изменить')),
             ),
           ],
         ),
@@ -517,7 +535,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'ПОЛЬЗОВАТЕЛЬ',
+                                context.tr('ПОЛЬЗОВАТЕЛЬ'),
                                 style: TextStyle(
                                   color: palette.accent,
                                   fontWeight: FontWeight.bold,
@@ -575,7 +593,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         // Menu Items
                         _buildMenuItem(
                           icon: Icons.palette_rounded,
-                          title: 'Тема приложения',
+                          title: context.tr('Тема приложения'),
                           description: _themeLabel(context.appTheme.mode),
                           onTap: () => showAppThemeSheet(context),
                         ),
@@ -583,9 +601,22 @@ class _ProfileScreenState extends State<ProfileScreen>
                         const SizedBox(height: 16),
 
                         _buildMenuItem(
+                          icon: Icons.language_rounded,
+                          title: context.tr('Язык интерфейса'),
+                          description: _languageLabel(
+                            context.appLanguage.language,
+                          ),
+                          onTap: () => showAppLanguageSheet(context),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        _buildMenuItem(
                           icon: Icons.star_rate_rounded,
-                          title: 'Оценённые книги',
-                          description: 'История оценок и сигналов рекомендаций',
+                          title: context.tr('Оценённые книги'),
+                          description: context.tr(
+                            'История оценок и сигналов рекомендаций',
+                          ),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -601,8 +632,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                         _buildMenuItem(
                           icon: Icons.format_quote_rounded,
-                          title: 'Любимые цитаты',
-                          description: 'Цитаты, опубликованные из книг',
+                          title: context.tr('Любимые цитаты'),
+                          description: context.tr(
+                            'Цитаты, опубликованные из книг',
+                          ),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -618,10 +651,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                         _buildMenuItem(
                           icon: Icons.person_outline,
-                          title: 'Смена имени пользователя',
+                          title: context.tr('Смена имени пользователя'),
                           description: nickname.isNotEmpty
                               ? nickname
-                              : 'Не установлен',
+                              : context.tr('Не установлен'),
                           onTap: _showNicknameDialog,
                         ),
 
@@ -629,8 +662,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                           const SizedBox(height: 16),
                           _buildMenuItem(
                             icon: Icons.lock_outline,
-                            title: 'Сменить пароль',
-                            description: 'Обновить пароль',
+                            title: context.tr('Сменить пароль'),
+                            description: context.tr('Обновить пароль'),
                             onTap: _showPasswordDialog,
                           ),
                         ],
@@ -666,17 +699,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.logout_rounded,
                                   color: Colors.white,
                                   size: 22,
                                 ),
-                                SizedBox(width: 12),
+                                const SizedBox(width: 12),
                                 Text(
-                                  'Выйти из системы',
+                                  context.tr('Выйти из системы'),
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
@@ -783,6 +816,15 @@ class _ProfileScreenState extends State<ProfileScreen>
         return 'Sepia';
       case AppThemeMode.light:
         return 'Light';
+    }
+  }
+
+  String _languageLabel(AppLanguage language) {
+    switch (language) {
+      case AppLanguage.ru:
+        return 'Русский';
+      case AppLanguage.en:
+        return 'English';
     }
   }
 }

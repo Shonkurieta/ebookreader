@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ebookreader/services/book_service.dart';
 import 'package:ebookreader/services/bookmark_service.dart';
 import 'package:ebookreader/screens/audio/audio_player_screen.dart';
@@ -310,6 +311,14 @@ class _HomeScreenState extends State<HomeScreen>
 
   int _compareLibraryBooks(dynamic a, dynamic b) {
     if (a is! Map<String, dynamic> || b is! Map<String, dynamic>) return 0;
+    if (widget.libraryOnly) {
+      final recent = _libraryLastOpenedMs(b).compareTo(_libraryLastOpenedMs(a));
+      if (recent != 0) return recent;
+      final active = _libraryActivityScore(
+        b,
+      ).compareTo(_libraryActivityScore(a));
+      if (active != 0) return active;
+    }
     int result;
     switch (_sortOption) {
       case SortOption.title:
@@ -328,6 +337,30 @@ class _HomeScreenState extends State<HomeScreen>
         break;
     }
     return _sortDirection == SortDirection.ascending ? result : -result;
+  }
+
+  int _libraryLastOpenedMs(Map<String, dynamic> book) {
+    final candidates = [
+      book['lastOpenedAt'],
+      book['lastReadAt'],
+      book['updatedAt'],
+      book['progressUpdatedAt'],
+      book['lastProgressAt'],
+      book['bookmarkUpdatedAt'],
+    ];
+    for (final value in candidates) {
+      final parsed = DateTime.tryParse(value?.toString() ?? '');
+      if (parsed != null) return parsed.millisecondsSinceEpoch;
+    }
+    return 0;
+  }
+
+  int _libraryActivityScore(Map<String, dynamic> book) {
+    final chapter = _asInt(
+      book['segmentOrder'] ?? book['currentChapter'] ?? book['chapterOrder'],
+    );
+    final progress = _asProgress(book['segmentProgress']);
+    return (chapter * 1000000) + (progress * 1000000).round();
   }
 
   double _bookAverageRating(Map<String, dynamic> book) {
@@ -455,19 +488,35 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _clearSearch() {
+    _searchDebounce?.cancel();
     _searchController.clear();
-    _searchBooks('');
     if (widget.libraryOnly) {
-      setState(() => _isSearchExpanded = false);
+      setState(() {
+        _searchQuery = '';
+        _isSearching = false;
+        _isSearchExpanded = false;
+        _filteredBooks = _filteredLibraryBooks(_books);
+      });
+    } else {
+      _searchBooks('');
     }
-    FocusScope.of(context).unfocus();
+    _hideKeyboardAfterFrame();
   }
 
   void _dismissKeyboard() {
-    FocusScope.of(context).unfocus();
+    _hideKeyboardAfterFrame();
     if (widget.libraryOnly && _searchController.text.isEmpty) {
       setState(() => _isSearchExpanded = false);
     }
+  }
+
+  void _hideKeyboardAfterFrame() {
+    _searchFocusNode.unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SystemChannels.textInput
+          .invokeMethod<void>('TextInput.hide')
+          .timeout(const Duration(milliseconds: 300), onTimeout: () {});
+    });
   }
 
   void _onScroll() {
@@ -594,9 +643,6 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _openDemoAudio(Map<String, dynamic> book) async {
     final bookId = _asInt(book['id']);
     if (bookId <= 0) return;
-    final progress = await _bookmarkService.getProgress(widget.token, bookId);
-    if (!mounted) return;
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -606,12 +652,10 @@ class _HomeScreenState extends State<HomeScreen>
           title: book['title']?.toString() ?? 'The Raven',
           author: authorLabel(book['author']),
           coverUrl: book['coverUrl']?.toString() ?? '',
-          initialSegmentOrder: _asInt(
-            progress['segmentOrder'] ?? progress['currentChapter'] ?? 1,
-          ).clamp(1, 999999).toInt(),
-          initialSegmentProgress: _asProgress(progress['segmentProgress']),
-          initialAudioPositionMs: _asInt(progress['audioPositionMs']),
-          initialLastMode: (progress['lastMode'] ?? 'TEXT').toString(),
+          initialSegmentOrder: 1,
+          initialSegmentProgress: 0,
+          initialAudioPositionMs: 0,
+          initialLastMode: 'TEXT',
         ),
       ),
     ).then((_) => _loadBooks(reset: true));
@@ -620,6 +664,12 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
+    final localizedTitle = widget.title == 'Каталог'
+        ? context.tr('Каталог')
+        : widget.title;
+    final localizedSubtitle = widget.subtitle == 'Все книги'
+        ? context.tr('Все книги', en: 'All books')
+        : widget.subtitle;
     return Scaffold(
       backgroundColor: palette.background,
       body: GestureDetector(
@@ -664,7 +714,7 @@ class _HomeScreenState extends State<HomeScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  widget.title,
+                                  localizedTitle,
                                   style: TextStyle(
                                     fontSize: 26,
                                     fontWeight: FontWeight.bold,
@@ -673,7 +723,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   ),
                                 ),
                                 Text(
-                                  '${widget.subtitle} • ${_totalItems > 0 ? _totalItems : _books.length} книг',
+                                  '$localizedSubtitle • ${context.booksCount(_totalItems > 0 ? _totalItems : _books.length)}',
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: palette.mutedText,
@@ -749,7 +799,7 @@ class _HomeScreenState extends State<HomeScreen>
         onTapOutside: (_) => _dismissKeyboard(),
         style: TextStyle(color: palette.text),
         decoration: InputDecoration(
-          hintText: 'Поиск книг...',
+          hintText: context.tr('Поиск книг...'),
           hintStyle: TextStyle(
             color: palette.mutedText.withValues(alpha: 0.75),
           ),
@@ -784,7 +834,7 @@ class _HomeScreenState extends State<HomeScreen>
         border: Border.all(color: palette.border, width: 1.2),
       ),
       child: IconButton(
-        tooltip: 'Поиск',
+        tooltip: context.tr('Поиск'),
         onPressed: _expandSearch,
         icon: Icon(Icons.search_rounded, color: palette.accent),
       ),
@@ -802,7 +852,7 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             Expanded(
               child: Text(
-                '${_totalItems > 0 ? _totalItems : _filteredBooks.length} результатов • ${_sortLabel()}',
+                '${_totalItems > 0 ? _totalItems : _filteredBooks.length} ${context.tr('результатов')} • ${_sortLabel()}',
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 style: TextStyle(color: palette.mutedText, fontSize: 13),
@@ -815,11 +865,11 @@ class _HomeScreenState extends State<HomeScreen>
                 isLabelVisible: activeFilterCount > 0,
                 child: Icon(Icons.filter_list_rounded, color: palette.accent),
               ),
-              tooltip: 'Фильтры',
+              tooltip: context.tr('Фильтры'),
             ),
             PopupMenuButton<String>(
               icon: Icon(Icons.sort_rounded, color: palette.accent),
-              tooltip: 'Сортировать',
+              tooltip: context.tr('Сортировать'),
               color: palette.elevated,
               elevation: 5,
               shape: RoundedRectangleBorder(
@@ -872,56 +922,68 @@ class _HomeScreenState extends State<HomeScreen>
                 PopupMenuItem(
                   value: 'title_asc',
                   child: Text(
-                    'Название A → Z',
+                    context.tr('Название A → Z', en: 'Title A → Z'),
                     style: TextStyle(color: palette.text, fontSize: 14),
                   ),
                 ),
                 PopupMenuItem(
                   value: 'title_desc',
                   child: Text(
-                    'Название Z → A',
+                    context.tr('Название Z → A', en: 'Title Z → A'),
                     style: TextStyle(color: palette.text, fontSize: 14),
                   ),
                 ),
                 PopupMenuItem(
                   value: 'rating_desc',
                   child: Text(
-                    'Рейтинг: высокий → низкий',
+                    context.tr(
+                      'Рейтинг: высокий → низкий',
+                      en: 'Rating: high → low',
+                    ),
                     style: TextStyle(color: palette.text, fontSize: 14),
                   ),
                 ),
                 PopupMenuItem(
                   value: 'rating_asc',
                   child: Text(
-                    'Рейтинг: низкий → высокий',
+                    context.tr(
+                      'Рейтинг: низкий → высокий',
+                      en: 'Rating: low → high',
+                    ),
                     style: TextStyle(color: palette.text, fontSize: 14),
                   ),
                 ),
                 PopupMenuItem(
                   value: 'popularity_desc',
                   child: Text(
-                    'Оценок: высокий → низкий',
+                    context.tr(
+                      'Оценок: высокий → низкий',
+                      en: 'Ratings: high → low',
+                    ),
                     style: TextStyle(color: palette.text, fontSize: 14),
                   ),
                 ),
                 PopupMenuItem(
                   value: 'popularity_asc',
                   child: Text(
-                    'Оценок: низкий → высокий',
+                    context.tr(
+                      'Оценок: низкий → высокий',
+                      en: 'Ratings: low → high',
+                    ),
                     style: TextStyle(color: palette.text, fontSize: 14),
                   ),
                 ),
                 PopupMenuItem(
                   value: 'language_asc',
                   child: Text(
-                    'Язык A → Z',
+                    context.tr('Язык A → Z', en: 'Language A → Z'),
                     style: TextStyle(color: palette.text, fontSize: 14),
                   ),
                 ),
                 PopupMenuItem(
                   value: 'language_desc',
                   child: Text(
-                    'Язык Z → A',
+                    context.tr('Язык Z → A', en: 'Language Z → A'),
                     style: TextStyle(color: palette.text, fontSize: 14),
                   ),
                 ),
@@ -1036,12 +1098,12 @@ class _HomeScreenState extends State<HomeScreen>
       case 'rus':
       case 'русский':
       case 'russian':
-        return 'Русский';
+        return context.appLanguage.isEnglish ? 'Russian' : 'Русский';
       case 'kk':
       case 'kaz':
       case 'kazakh':
       case 'қазақша':
-        return 'Қазақша';
+        return context.appLanguage.isEnglish ? 'Kazakh' : 'Қазақша';
       case 'es':
       case 'spa':
       case 'español':
@@ -1112,16 +1174,16 @@ class _HomeScreenState extends State<HomeScreen>
     String base;
     switch (_sortOption) {
       case SortOption.rating:
-        base = 'Рейтинг';
+        base = context.tr('Рейтинг');
         break;
       case SortOption.popularity:
-        base = 'Оценки';
+        base = context.tr('Оценки');
         break;
       case SortOption.language:
-        base = 'Язык';
+        base = context.tr('Язык');
         break;
       case SortOption.title:
-        base = 'Название';
+        base = context.tr('Название');
         break;
     }
     final dir = _sortDirection == SortDirection.descending ? '↓' : '↑';
@@ -1153,7 +1215,9 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           const SizedBox(height: 24),
           Text(
-            widget.libraryOnly ? 'Библиотека пуста' : 'Книги не найдены',
+            widget.libraryOnly
+                ? context.tr('Библиотека пуста')
+                : context.tr('Книги не найдены'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -1163,8 +1227,10 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(height: 8),
           Text(
             widget.libraryOnly
-                ? 'Начните читать книгу, и она появится здесь'
-                : 'Попробуйте поискать по другому названию или автору',
+                ? context.tr('Начните читать книгу, и она появится здесь')
+                : context.tr(
+                    'Попробуйте поискать по другому названию или автору',
+                  ),
             style: TextStyle(fontSize: 14, color: palette.mutedText),
           ),
         ],
@@ -1177,11 +1243,11 @@ class _HomeScreenState extends State<HomeScreen>
       children: [
         if (_selectedLibraryBookIds.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
             child: _buildLibrarySelectionBar(),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
           child: _buildLibraryStatusTabs(),
         ),
         if (_demoAudiobook != null)
@@ -1224,13 +1290,13 @@ class _HomeScreenState extends State<HomeScreen>
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Снять выделение',
+            tooltip: context.tr('Снять выделение'),
             onPressed: _isDeletingLibraryBooks ? null : _clearLibrarySelection,
             icon: const Icon(Icons.close_rounded),
           ),
           Expanded(
             child: Text(
-              '$count выбрано',
+              '$count ${context.tr('выбрано')}',
               style: TextStyle(
                 color: palette.text,
                 fontWeight: FontWeight.w700,
@@ -1251,7 +1317,7 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   )
                 : const Icon(Icons.delete_outline_rounded, size: 18),
-            label: const Text('Удалить'),
+            label: Text(context.tr('Удалить')),
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red.shade600,
               foregroundColor: Colors.white,
@@ -1289,23 +1355,23 @@ class _HomeScreenState extends State<HomeScreen>
           child: _buildLibraryStatusTab(
             status: LibraryStatusFilter.reading,
             icon: Icons.menu_book_rounded,
-            label: 'Читаю',
+            label: context.tr('Читаю'),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         Expanded(
           child: _buildLibraryStatusTab(
             status: LibraryStatusFilter.wantToRead,
             icon: Icons.bookmark_border_rounded,
-            label: 'Хочу',
+            label: context.tr('Хочу'),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         Expanded(
           child: _buildLibraryStatusTab(
             status: LibraryStatusFilter.finished,
             icon: Icons.done_all_rounded,
-            label: 'Прочитано',
+            label: context.tr('Прочитано'),
           ),
         ),
       ],
@@ -1321,31 +1387,39 @@ class _HomeScreenState extends State<HomeScreen>
     final selected = _libraryStatusFilter == status;
     final count = _libraryStatusCount(status);
     return SizedBox(
-      height: 44,
+      height: 34,
       child: selected
           ? FilledButton.icon(
               onPressed: () {},
-              icon: Icon(icon, size: 17),
+              icon: Icon(icon, size: 14),
               label: FittedBox(child: Text('$label $count')),
               style: FilledButton.styleFrom(
                 backgroundColor: palette.accent,
                 foregroundColor: palette.onAccent,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                textStyle: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(9),
                 ),
               ),
             )
           : OutlinedButton.icon(
               onPressed: () => _selectLibraryStatus(status),
-              icon: Icon(icon, size: 17),
+              icon: Icon(icon, size: 14),
               label: FittedBox(child: Text('$label $count')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: palette.mutedText,
                 side: BorderSide(color: palette.border),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                textStyle: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(9),
                 ),
               ),
             ),
@@ -1389,7 +1463,7 @@ class _HomeScreenState extends State<HomeScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Демо-аудиокнига',
+                  context.tr('Демо-аудиокнига'),
                   style: TextStyle(
                     color: palette.accent,
                     fontSize: 12,
@@ -1408,7 +1482,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
                 Text(
-                  '${authorLabel(book['author'])} · текст + аудио',
+                  '${authorLabel(book['author'])} · ${context.tr('Текст + аудио')}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: palette.mutedText, fontSize: 12),
@@ -1421,12 +1495,12 @@ class _HomeScreenState extends State<HomeScreen>
                     FilledButton.icon(
                       onPressed: () => _openDemoAudio(book),
                       icon: const Icon(Icons.headphones_rounded, size: 18),
-                      label: const Text('Слушать'),
+                      label: Text(context.tr('Слушать')),
                     ),
                     OutlinedButton.icon(
                       onPressed: () => _openBookPrimaryAction(book),
                       icon: const Icon(Icons.menu_book_rounded, size: 18),
-                      label: const Text('Читать'),
+                      label: Text(context.tr('Читать')),
                     ),
                   ],
                 ),
@@ -1718,8 +1792,8 @@ class _HomeScreenState extends State<HomeScreen>
                                   const SizedBox(width: 5),
                                   Text(
                                     _isUsableAvailability(availability)
-                                        ? 'Открыть'
-                                        : 'Детали',
+                                        ? context.tr('Открыть')
+                                        : context.tr('Детали'),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: palette.onAccent,
@@ -1778,12 +1852,20 @@ class _HomeScreenState extends State<HomeScreen>
 
   String _formatRatingsCount(int count) {
     if (count >= 1000000) {
-      return '${(count / 1000000).toStringAsFixed(count >= 10000000 ? 0 : 1)}M оценок';
+      final short = (count / 1000000).toStringAsFixed(
+        count >= 10000000 ? 0 : 1,
+      );
+      return context.appLanguage.isEnglish
+          ? '${short}M ratings'
+          : '${short}M оценок';
     }
     if (count >= 1000) {
-      return '${(count / 1000).toStringAsFixed(count >= 10000 ? 0 : 1)}K оценок';
+      final short = (count / 1000).toStringAsFixed(count >= 10000 ? 0 : 1);
+      return context.appLanguage.isEnglish
+          ? '${short}K ratings'
+          : '${short}K оценок';
     }
-    return '$count оценок';
+    return context.ratingsCount(count);
   }
 
   String _bookAvailability(Map<String, dynamic> book) {
@@ -1807,15 +1889,15 @@ class _HomeScreenState extends State<HomeScreen>
   String _availabilityLabel(String availability) {
     switch (availability) {
       case 'TEXT':
-        return 'Текст';
+        return context.tr('Текст');
       case 'AUDIO':
-        return 'Аудио';
+        return context.tr('Аудио');
       case 'SYNCED':
-        return 'Текст + аудио';
+        return context.tr('Текст + аудио');
       case 'PDF_ONLY':
         return 'PDF';
       default:
-        return 'Каталог';
+        return context.tr('Каталог');
     }
   }
 
@@ -1827,7 +1909,7 @@ class _HomeScreenState extends State<HomeScreen>
       case 'AUDIO':
         return const Color(0xFFFFD166);
       case 'SYNCED':
-        return const Color(0xFF7CFF6B);
+        return palette.success;
       case 'PDF_ONLY':
         return const Color(0xFFFF7A7A);
       default:
@@ -1837,11 +1919,15 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildTag(String text, {bool selected = false, Color? color}) {
     final palette = context.palette;
+    final accentColor = color ?? palette.mutedText;
     final background = selected
         ? palette.accent
-        : color?.withValues(alpha: 0.18) ??
-              palette.text.withValues(alpha: palette.isDark ? 0.06 : 0.12);
-    final foreground = selected ? palette.onAccent : color ?? palette.mutedText;
+        : accentColor.withValues(alpha: palette.isDark ? 0.18 : 0.14);
+    final foreground = selected
+        ? palette.onAccent
+        : palette.isDark
+        ? accentColor
+        : Color.lerp(accentColor, Colors.black, 0.30)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -1997,11 +2083,17 @@ class _FilterScreenState extends State<FilterScreen> {
       appBar: AppBar(
         backgroundColor: palette.surface,
         elevation: 0,
-        title: Text('Фильтр', style: TextStyle(color: palette.text)),
+        title: Text(
+          context.tr('Фильтр'),
+          style: TextStyle(color: palette.text),
+        ),
         actions: [
           TextButton(
             onPressed: _clearFilters,
-            child: Text('Сброс', style: TextStyle(color: palette.accent)),
+            child: Text(
+              context.tr('Сброс'),
+              style: TextStyle(color: palette.accent),
+            ),
           ),
         ],
       ),
@@ -2017,7 +2109,7 @@ class _FilterScreenState extends State<FilterScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Жанр',
+                context.tr('Жанр'),
                 style: TextStyle(
                   color: palette.text,
                   fontSize: 18,
@@ -2031,7 +2123,7 @@ class _FilterScreenState extends State<FilterScreen> {
                 children: [
                   ChoiceChip(
                     label: Text(
-                      'Все жанры',
+                      context.tr('Все жанры'),
                       style: TextStyle(
                         color: _selectedGenres.isEmpty
                             ? palette.onAccent
@@ -2058,7 +2150,7 @@ class _FilterScreenState extends State<FilterScreen> {
                     final selected = _selectedGenres.contains(genre);
                     return FilterChip(
                       label: Text(
-                        genreLabel(genre),
+                        context.genreLabel(genre),
                         style: TextStyle(
                           color: selected ? palette.onAccent : palette.text,
                           fontSize: 14,
@@ -2086,7 +2178,7 @@ class _FilterScreenState extends State<FilterScreen> {
               ),
               const SizedBox(height: 18),
               Text(
-                'Доступность',
+                context.tr('Доступность'),
                 style: TextStyle(
                   color: palette.text,
                   fontSize: 18,
@@ -2100,19 +2192,19 @@ class _FilterScreenState extends State<FilterScreen> {
                 children: [
                   _buildContentFeatureChip(
                     feature: 'text',
-                    label: 'Есть текст',
+                    label: context.tr('Есть текст'),
                     icon: Icons.menu_book_rounded,
                   ),
                   _buildContentFeatureChip(
                     feature: 'audio',
-                    label: 'Есть аудио',
+                    label: context.tr('Есть аудио'),
                     icon: Icons.headphones_rounded,
                   ),
                 ],
               ),
               const SizedBox(height: 18),
               Text(
-                'Язык',
+                context.tr('Язык'),
                 style: TextStyle(
                   color: palette.text,
                   fontSize: 18,
@@ -2124,7 +2216,7 @@ class _FilterScreenState extends State<FilterScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Text(
-                    'Языки недоступны',
+                    context.tr('Языки недоступны'),
                     style: TextStyle(color: palette.mutedText, fontSize: 14),
                   ),
                 )
@@ -2187,7 +2279,7 @@ class _FilterScreenState extends State<FilterScreen> {
                 ),
               const SizedBox(height: 18),
               Text(
-                'Рейтинг',
+                context.tr('Рейтинг'),
                 style: TextStyle(
                   color: palette.text,
                   fontSize: 18,
@@ -2199,7 +2291,7 @@ class _FilterScreenState extends State<FilterScreen> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  _buildFilterChip(null, 'Все рейтинги'),
+                  _buildFilterChip(null, context.tr('Все рейтинги')),
                   _buildFilterChip(3.0, '> 3.0'),
                   _buildFilterChip(3.5, '> 3.5'),
                   _buildFilterChip(4.0, '> 4.0'),
@@ -2217,7 +2309,7 @@ class _FilterScreenState extends State<FilterScreen> {
                         side: BorderSide(color: palette.border),
                         foregroundColor: palette.text,
                       ),
-                      child: const Text('Очистить'),
+                      child: Text(context.tr('Очистить')),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -2228,7 +2320,7 @@ class _FilterScreenState extends State<FilterScreen> {
                         backgroundColor: palette.accent,
                         foregroundColor: palette.onAccent,
                       ),
-                      child: const Text('Применить'),
+                      child: Text(context.tr('Применить')),
                     ),
                   ),
                 ],
@@ -2332,12 +2424,12 @@ class _FilterScreenState extends State<FilterScreen> {
       case 'rus':
       case 'русский':
       case 'russian':
-        return 'Русский';
+        return context.appLanguage.isEnglish ? 'Russian' : 'Русский';
       case 'kk':
       case 'kaz':
       case 'kazakh':
       case 'қазақша':
-        return 'Қазақша';
+        return context.appLanguage.isEnglish ? 'Kazakh' : 'Қазақша';
       case 'es':
       case 'spa':
       case 'español':

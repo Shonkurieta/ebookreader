@@ -47,7 +47,9 @@ class _ForYouScreenState extends State<ForYouScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка загрузки рекомендаций: $e'),
+          content: Text(
+            '${context.tr('Ошибка загрузки рекомендаций', en: 'Recommendations loading error')}: $e',
+          ),
           backgroundColor: context.palette.danger,
         ),
       );
@@ -60,8 +62,8 @@ class _ForYouScreenState extends State<ForYouScreen> {
       MaterialPageRoute(
         builder: (_) => HomeScreen(
           token: widget.token,
-          title: 'Каталог',
-          subtitle: 'Все книги Goodreads',
+          title: context.tr('Каталог'),
+          subtitle: context.tr('Все книги Goodreads'),
         ),
       ),
     );
@@ -120,7 +122,7 @@ class _ForYouScreenState extends State<ForYouScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Для вас',
+                  context.tr('Для вас'),
                   style: TextStyle(
                     color: palette.text,
                     fontSize: 30,
@@ -129,19 +131,19 @@ class _ForYouScreenState extends State<ForYouScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'AI-рекомендации по вашим оценкам',
+                  context.tr('AI-рекомендации по вашим оценкам'),
                   style: TextStyle(color: palette.mutedText, fontSize: 14),
                 ),
               ],
             ),
           ),
           IconButton(
-            tooltip: 'Настроить вкус',
+            tooltip: context.tr('Настроить вкус'),
             onPressed: _openOnboarding,
             icon: Icon(Icons.auto_awesome_rounded, color: palette.accent),
           ),
           IconButton(
-            tooltip: 'Открыть каталог',
+            tooltip: context.tr('Открыть каталог'),
             onPressed: _openCatalog,
             icon: Icon(Icons.search_rounded, color: palette.text),
           ),
@@ -164,7 +166,7 @@ class _ForYouScreenState extends State<ForYouScreen> {
               Icon(Icons.psychology_rounded, color: palette.accent, size: 54),
               const SizedBox(height: 16),
               Text(
-                'Научим модель вашему вкусу',
+                context.tr('Научим модель вашему вкусу'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: palette.text,
@@ -174,7 +176,9 @@ class _ForYouScreenState extends State<ForYouScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                'Выберите 3-10 книг, которые вам понравились. После этого здесь появится ваша персональная полка.',
+                context.tr(
+                  'Выберите 3-10 книг, которые вам понравились. После этого здесь появится ваша персональная полка.',
+                ),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: palette.mutedText, height: 1.45),
               ),
@@ -182,12 +186,12 @@ class _ForYouScreenState extends State<ForYouScreen> {
               ElevatedButton.icon(
                 onPressed: _openOnboarding,
                 icon: const Icon(Icons.star_rounded),
-                label: const Text('Выбрать любимые книги'),
+                label: Text(context.tr('Выбрать любимые книги')),
               ),
               TextButton.icon(
                 onPressed: _openCatalog,
                 icon: const Icon(Icons.library_books_rounded),
-                label: const Text('Открыть полный каталог'),
+                label: Text(context.tr('Открыть полный каталог')),
               ),
             ],
           ),
@@ -217,7 +221,9 @@ class _ForYouScreenState extends State<ForYouScreen> {
   ) {
     final palette = context.palette;
     final bookId = _asInt(book['id']);
-    final reason = recommendation['reason']?.toString() ?? 'AI match';
+    final reason = _localizedReason(
+      recommendation['reason']?.toString() ?? 'AI match',
+    );
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: () => Navigator.push(
@@ -251,7 +257,7 @@ class _ForYouScreenState extends State<ForYouScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    book['title']?.toString() ?? 'Без названия',
+                    book['title']?.toString() ?? context.tr('Без названия'),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -273,7 +279,10 @@ class _ForYouScreenState extends State<ForYouScreen> {
                     runSpacing: 6,
                     children: [
                       _chip(reason, palette.accent),
-                      _chip('AI ${(100 * _asDouble(recommendation['score'])).toStringAsFixed(0)}%', palette.secondaryAccent),
+                      _chip(
+                        'AI ${(100 * _asDouble(recommendation['score'])).toStringAsFixed(0)}%',
+                        palette.secondaryAccent,
+                      ),
                     ],
                   ),
                 ],
@@ -285,7 +294,25 @@ class _ForYouScreenState extends State<ForYouScreen> {
     );
   }
 
-  Widget _cover(Map<String, dynamic> book, {required double width, required double height}) {
+  String _localizedReason(String reason) {
+    final normalized = reason.trim().toLowerCase();
+    if (normalized.contains('жанр') || normalized.contains('genre')) {
+      return context.tr('Похожий жанр', en: 'Similar genre');
+    }
+    if (normalized.contains('автор') || normalized.contains('author')) {
+      return context.tr('Похожий автор', en: 'Similar author');
+    }
+    if (normalized.contains('похож')) {
+      return context.tr('Похожая книга', en: 'Similar book');
+    }
+    return context.tr(reason, en: reason);
+  }
+
+  Widget _cover(
+    Map<String, dynamic> book, {
+    required double width,
+    required double height,
+  }) {
     final palette = context.palette;
     final coverUrl = book['coverUrl']?.toString() ?? '';
     if (coverUrl.isEmpty) {
@@ -320,7 +347,11 @@ class _ForYouScreenState extends State<ForYouScreen> {
       ),
       child: Text(
         text,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

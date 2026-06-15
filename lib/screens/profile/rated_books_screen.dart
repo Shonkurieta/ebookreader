@@ -39,7 +39,7 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка загрузки оценённых книг: $e'),
+          content: Text('${context.tr('Ошибка загрузки оценённых книг')}: $e'),
           backgroundColor: context.palette.danger,
           behavior: SnackBarBehavior.floating,
         ),
@@ -107,7 +107,7 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Оценённые книги',
+                  context.tr('Оценённые книги'),
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -115,7 +115,7 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
                   ),
                 ),
                 Text(
-                  'История оценок и сигналов рекомендаций',
+                  context.tr('История оценок и сигналов рекомендаций'),
                   style: TextStyle(fontSize: 14, color: palette.mutedText),
                 ),
               ],
@@ -170,7 +170,10 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
     final positiveSignals = signals.where((signal) => signal > 0.05).length;
     final latest = _ratedBooks
         .map((book) => _dateText(_asMap(book)['ratingDate']))
-        .firstWhere((date) => date.isNotEmpty, orElse: () => 'нет даты');
+        .firstWhere(
+          (date) => date.isNotEmpty,
+          orElse: () => context.tr('нет даты'),
+        );
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -179,21 +182,21 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
         children: [
           _buildSummaryMetric(
             icon: Icons.star_rate_rounded,
-            label: 'Средняя',
+            label: context.tr('Средняя'),
             value: average.toStringAsFixed(1),
             color: const Color(0xFFFFD166),
           ),
           _summaryDivider(),
           _buildSummaryMetric(
             icon: Icons.auto_awesome_rounded,
-            label: 'Сигналы',
+            label: context.tr('Сигналы'),
             value: '$positiveSignals',
             color: context.palette.accent,
           ),
           _summaryDivider(),
           _buildSummaryMetric(
             icon: Icons.calendar_month_rounded,
-            label: 'Последняя',
+            label: context.tr('Последняя'),
             value: latest,
             color: context.palette.secondaryAccent,
           ),
@@ -247,8 +250,9 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
   Widget _buildRatedBookCard(Map<String, dynamic> book) {
     final palette = context.palette;
     final bookId = _asInt(book['id']);
-    final title = (book['title'] ?? 'Без названия').toString();
-    final author = (book['author'] ?? 'Неизвестный автор').toString();
+    final title = (book['title'] ?? context.tr('Без названия')).toString();
+    final author = (book['author'] ?? context.tr('Неизвестный автор'))
+        .toString();
     final coverUrl = book['coverUrl']?.toString();
     final rating = _ratingOf(book);
     final recommendationSignal = _asDouble(
@@ -329,7 +333,9 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
                         children: [
                           _buildInfoChip(
                             Icons.event_available_rounded,
-                            ratingDate.isEmpty ? 'Дата неизвестна' : ratingDate,
+                            ratingDate.isEmpty
+                                ? context.tr('Дата неизвестна')
+                                : ratingDate,
                           ),
                           _buildInfoChip(
                             Icons.analytics_rounded,
@@ -472,7 +478,7 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
         ),
         const SizedBox(height: 20),
         Text(
-          'Пока нет оценённых книг',
+          context.tr('Пока нет оценённых книг'),
           textAlign: TextAlign.center,
           style: TextStyle(
             color: palette.text,
@@ -482,7 +488,9 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Когда пользователь поставит звёзды книге, она появится здесь вместе с датой и вкладом в рекомендации.',
+          context.tr(
+            'Когда пользователь поставит звёзды книге, она появится здесь вместе с датой и вкладом в рекомендации.',
+          ),
           textAlign: TextAlign.center,
           style: TextStyle(
             color: palette.mutedText,
@@ -540,15 +548,19 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
   }
 
   String _recommendationText(double signal, double userAverageRating) {
-    if (userAverageRating <= 0) return 'Нет среднего рейтинга';
+    if (userAverageRating <= 0) return context.tr('Нет среднего рейтинга');
     final signed = signal >= 0
         ? '+${signal.toStringAsFixed(1)}'
         : signal.toStringAsFixed(1);
-    if (signal > 0.75) return 'Сильно выше среднего $signed';
-    if (signal > 0.05) return 'Выше среднего $signed';
-    if (signal < -0.75) return 'Сильно ниже среднего $signed';
-    if (signal < -0.05) return 'Ниже среднего $signed';
-    return 'Около среднего';
+    if (signal > 0.75) {
+      return '${context.tr('Сильно выше среднего')} $signed';
+    }
+    if (signal > 0.05) return '${context.tr('Выше среднего')} $signed';
+    if (signal < -0.75) {
+      return '${context.tr('Сильно ниже среднего')} $signed';
+    }
+    if (signal < -0.05) return '${context.tr('Ниже среднего')} $signed';
+    return context.tr('Около среднего');
   }
 
   String _dateText(dynamic value) {
@@ -563,11 +575,15 @@ class _RatedBooksScreenState extends State<RatedBooksScreen> {
 
   String _formatCount(int count) {
     if (count >= 1000000) {
-      return '${(count / 1000000).toStringAsFixed(1)}M оценок';
+      return context.appLanguage.isEnglish
+          ? '${(count / 1000000).toStringAsFixed(1)}M ratings'
+          : '${(count / 1000000).toStringAsFixed(1)}M оценок';
     }
     if (count >= 1000) {
-      return '${(count / 1000).toStringAsFixed(1)}K оценок';
+      return context.appLanguage.isEnglish
+          ? '${(count / 1000).toStringAsFixed(1)}K ratings'
+          : '${(count / 1000).toStringAsFixed(1)}K оценок';
     }
-    return '$count оценок';
+    return context.ratingsCount(count);
   }
 }

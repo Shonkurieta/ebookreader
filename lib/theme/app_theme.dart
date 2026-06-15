@@ -1,5 +1,8 @@
+import 'package:ebookreader/l10n/app_language.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+export 'package:ebookreader/l10n/app_language.dart';
 
 enum AppThemeMode { dark, sepia, light }
 
@@ -310,66 +313,203 @@ class AppThemePicker extends StatelessWidget {
   }
 }
 
+class AppLanguagePicker extends StatelessWidget {
+  final bool compact;
+
+  const AppLanguagePicker({super.key, this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.appLanguage;
+    final palette = context.palette;
+
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        return SegmentedButton<AppLanguage>(
+          showSelectedIcon: false,
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return palette.accent.withValues(
+                  alpha: palette.isDark ? 0.18 : 0.12,
+                );
+              }
+              return palette.elevated.withValues(alpha: compact ? 0.55 : 0.85);
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) return palette.accent;
+              return palette.mutedText;
+            }),
+            side: WidgetStateProperty.all(BorderSide(color: palette.border)),
+            visualDensity: compact
+                ? VisualDensity.compact
+                : VisualDensity.standard,
+          ),
+          segments: const [
+            ButtonSegment(
+              value: AppLanguage.ru,
+              icon: Text('RU'),
+              label: Text('Русский'),
+            ),
+            ButtonSegment(
+              value: AppLanguage.en,
+              icon: Text('EN'),
+              label: Text('English'),
+            ),
+          ],
+          selected: {controller.language},
+          onSelectionChanged: (selection) {
+            controller.setLanguage(selection.first);
+          },
+        );
+      },
+    );
+  }
+}
+
 void showAppThemeSheet(BuildContext context) {
   final palette = context.palette;
+  final languageController = context.appLanguage;
   showModalBottomSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) => AppThemeScope(
       controller: context.appTheme,
-      child: Builder(
-        builder: (context) {
-          final sheetPalette = context.palette;
-          return Container(
-            padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
-            decoration: BoxDecoration(
-              color: sheetPalette.elevated,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
-              border: Border.all(color: sheetPalette.border),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(
-                    alpha: palette.isDark ? 0.35 : 0.12,
-                  ),
-                  blurRadius: 24,
-                  offset: const Offset(0, -10),
+      child: AppLanguageScope(
+        controller: languageController,
+        child: Builder(
+          builder: (context) {
+            final sheetPalette = context.palette;
+            return Container(
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
+              decoration: BoxDecoration(
+                color: sheetPalette.elevated,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 42,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: sheetPalette.border,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                border: Border.all(color: sheetPalette.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: palette.isDark ? 0.35 : 0.12,
                     ),
+                    blurRadius: 24,
+                    offset: const Offset(0, -10),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Тема приложения',
-                    style: TextStyle(
-                      color: sheetPalette.text,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  const AppThemePicker(),
                 ],
               ),
-            ),
-          );
-        },
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 42,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: sheetPalette.border,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      context.tr('Внешний вид'),
+                      style: TextStyle(
+                        color: sheetPalette.text,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      context.tr('Тема приложения'),
+                      style: TextStyle(
+                        color: sheetPalette.mutedText,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const AppThemePicker(),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
+void showAppLanguageSheet(BuildContext context) {
+  final palette = context.palette;
+  final themeController = context.appTheme;
+  final languageController = context.appLanguage;
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) => AppThemeScope(
+      controller: themeController,
+      child: AppLanguageScope(
+        controller: languageController,
+        child: Builder(
+          builder: (context) {
+            final sheetPalette = context.palette;
+            return Container(
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
+              decoration: BoxDecoration(
+                color: sheetPalette.elevated,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+                border: Border.all(color: sheetPalette.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: palette.isDark ? 0.35 : 0.12,
+                    ),
+                    blurRadius: 24,
+                    offset: const Offset(0, -10),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 42,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: sheetPalette.border,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      context.tr('Язык интерфейса'),
+                      style: TextStyle(
+                        color: sheetPalette.text,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const AppLanguagePicker(),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     ),
   );

@@ -7,10 +7,21 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 
+class AudiobookPlaybackException implements Exception {
+  final String message;
+
+  const AudiobookPlaybackException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class AudiobookPlaybackService {
   AudiobookPlaybackService._();
 
   static final AudiobookPlaybackService instance = AudiobookPlaybackService._();
+  static const Duration _sourceLoadTimeout = Duration(seconds: 8);
+  static const Duration _playStartupTimeout = Duration(seconds: 12);
 
   final AudioPlayer player = AudioPlayer(useProxyForRequestHeaders: false);
   final BookmarkService _bookmarkService = BookmarkService();
@@ -56,7 +67,9 @@ class AudiobookPlaybackService {
     final desiredIndex = tracks.indexWhere(
       (track) => track.segmentOrder == initialSegmentOrder,
     );
-    final nextIndex = desiredIndex >= 0 ? desiredIndex : 0;
+    if (desiredIndex < 0) {
+      throw StateError('No audio track for segment $initialSegmentOrder');
+    }
     final shouldReuseCurrentAudio =
         player.audioSource != null &&
         wasSameBook &&
@@ -67,13 +80,75 @@ class AudiobookPlaybackService {
       return;
     }
 
-    trackIndexNotifier.value = nextIndex;
+    trackIndexNotifier.value = desiredIndex;
     await _loadCurrentTrack(
       restorePosition: true,
       initialSegmentProgress: initialSegmentProgress,
       initialAudioPositionMs: initialAudioPositionMs,
       initialLastMode: initialLastMode,
     );
+  }
+
+  Future<void> playWithStartupTimeout() async {
+    final track = currentTrack;
+    if (track == null) {
+      throw const AudiobookPlaybackException('Аудиотрек не найден');
+    }
+
+    final ready = Completer<void>();
+    late final StreamSubscription<PlayerState> subscription;
+    subscription = player.playerStateStream.listen(
+      (state) {
+        if (ready.isCompleted) return;
+        if (state.processingState == ProcessingState.ready ||
+            state.processingState == ProcessingState.completed) {
+          ready.complete();
+        }
+      },
+      onError: (Object error) {
+        if (!ready.isCompleted) {
+          ready.completeError(error);
+        }
+      },
+    );
+
+    try {
+      unawaited(
+        player.play().catchError((Object error) {
+          if (!ready.isCompleted) {
+            ready.completeError(error);
+          }
+        }),
+      );
+      await ready.future.timeout(_playStartupTimeout);
+    } on TimeoutException {
+      await resetAfterFailedLoad();
+      throw const AudiobookPlaybackException(
+        'Аудио слишком долго загружается. Проверьте подключение и попробуйте снова.',
+      );
+    } catch (error) {
+      await resetAfterFailedLoad();
+      throw AudiobookPlaybackException(error.toString());
+    } finally {
+      await subscription.cancel();
+    }
+  }
+
+  Future<void> resetAfterFailedLoad() async {
+    try {
+      await player.stop();
+    } catch (_) {
+      // Ignore cleanup errors; the next load will replace the source.
+    }
+  }
+
+  void discardStuckLoad() {
+    final state = player.processingState;
+    if (!player.playing &&
+        (state == ProcessingState.loading ||
+            state == ProcessingState.buffering)) {
+      unawaited(resetAfterFailedLoad());
+    }
   }
 
   Future<void> playNextTrack() async {
@@ -147,7 +222,7 @@ class AudiobookPlaybackService {
     final cover = _coverArtUri();
     final source = AudioSource.uri(
       Uri.parse(streamUrl),
-      headers: {'Authorization': 'Bearer $_token'},
+      headers: _headersForAudioUrl(streamUrl),
       tag: MediaItem(
         id: 'book-$_bookId-track-${track.id}',
         album: _title,
@@ -160,19 +235,37 @@ class AudiobookPlaybackService {
       ),
     );
 
-    await player.setAudioSource(source);
-
+    Duration? seekTarget;
     if (restorePosition) {
-      final seekTarget = _audioResumeTarget(
+      seekTarget = _audioResumeTarget(
         trackDurationMs: track.durationMs,
         initialSegmentProgress: initialSegmentProgress,
         initialAudioPositionMs: initialAudioPositionMs,
         initialLastMode: initialLastMode,
       );
-      if (seekTarget != null && seekTarget > Duration.zero) {
-        await player.seek(seekTarget);
-      }
     }
+
+    await player
+        .setAudioSource(source, initialPosition: seekTarget, preload: false)
+        .timeout(
+          _sourceLoadTimeout,
+          onTimeout: () async {
+            await resetAfterFailedLoad();
+            throw const AudiobookPlaybackException(
+              'Аудио слишком долго загружается. Проверьте подключение и попробуйте снова.',
+            );
+          },
+        );
+  }
+
+  Map<String, String>? _headersForAudioUrl(String streamUrl) {
+    final uri = Uri.tryParse(streamUrl);
+    final apiUri = Uri.tryParse(ApiConstants.baseUrl);
+    if (uri == null || apiUri == null) return null;
+    if (uri.host == apiUri.host && uri.port == apiUri.port) {
+      return {'Authorization': 'Bearer $_token'};
+    }
+    return null;
   }
 
   void _bindSubscriptions() {

@@ -76,6 +76,8 @@ class _ReaderScreenState extends State<ReaderScreen>
   double _segmentProgress = 0.0;
   BookAnnotation? _pendingScrollAnnotation;
   Timer? _progressSaveTimer;
+  Offset? _readerPointerDownPosition;
+  bool _readerPointerMoved = false;
   bool _restoredInitialScroll = false;
   late AnimationController _animController;
   static const int _maxQuoteWords = 120;
@@ -182,7 +184,7 @@ class _ReaderScreenState extends State<ReaderScreen>
             children: [
               const Icon(Icons.error_outline, color: Colors.white),
               const SizedBox(width: 12),
-              Expanded(child: Text('Ошибка загрузки: $e')),
+              Expanded(child: Text('${context.tr('Ошибка загрузки')}: $e')),
             ],
           ),
           backgroundColor: Colors.red.shade600,
@@ -344,7 +346,7 @@ class _ReaderScreenState extends State<ReaderScreen>
         await _showNoteEditor(annotation);
       }
     } catch (e) {
-      _showError('Ошибка сохранения выделения: $e');
+      _showError('${context.tr('Ошибка сохранения выделения')}: $e');
     }
   }
 
@@ -357,7 +359,9 @@ class _ReaderScreenState extends State<ReaderScreen>
       return;
     }
     if (_wordCount(_selectedText) > _maxQuoteWords) {
-      _showError('Цитата не может быть длиннее $_maxQuoteWords слов');
+      _showError(
+        '${context.tr('Цитата не может быть длиннее')} $_maxQuoteWords ${context.tr('слов')}',
+      );
       return;
     }
 
@@ -385,12 +389,12 @@ class _ReaderScreenState extends State<ReaderScreen>
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Цитата опубликована'),
+          content: Text(context.tr('Цитата опубликована')),
           backgroundColor: context.palette.success,
         ),
       );
     } catch (e) {
-      _showError('Ошибка публикации цитаты: $e');
+      _showError('${context.tr('Ошибка публикации цитаты')}: $e');
     }
   }
 
@@ -415,7 +419,7 @@ class _ReaderScreenState extends State<ReaderScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLookupLoading = false);
-      _showError('Ошибка словаря: $e');
+      _showError('${context.tr('Ошибка словаря')}: $e');
       return;
     }
 
@@ -441,7 +445,7 @@ class _ReaderScreenState extends State<ReaderScreen>
   ) async {
     final content = _chapter?['content']?.toString() ?? '';
     if (selection.end > content.length || selection.start < 0) {
-      _showError('Выделение больше не совпадает с текстом главы');
+      _showError(context.tr('Выделение больше не совпадает с текстом главы'));
       return;
     }
 
@@ -466,12 +470,12 @@ class _ReaderScreenState extends State<ReaderScreen>
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Сохранено в словарь'),
+          content: Text(context.tr('Сохранено в словарь')),
           backgroundColor: context.palette.success,
         ),
       );
     } catch (e) {
-      _showError('Ошибка сохранения в словарь: $e');
+      _showError('${context.tr('Ошибка сохранения в словарь')}: $e');
     }
   }
 
@@ -493,15 +497,15 @@ class _ReaderScreenState extends State<ReaderScreen>
         result.translation!.source,
     };
 
-    final lines = <String>['Словарь'];
+    final lines = <String>[context.tr('Словарь')];
     if (definition != null && definition.isNotEmpty) {
-      lines.add('Определение: $definition');
+      lines.add('${context.tr('Определение')}: $definition');
     }
     if (translation != null && translation.isNotEmpty) {
-      lines.add('Перевод: $translation');
+      lines.add('${context.tr('Перевод')}: $translation');
     }
     if (sources.isNotEmpty) {
-      lines.add('Источник: ${sources.join(' / ')}');
+      lines.add('${context.tr('Источник')}: ${sources.join(' / ')}');
     }
     return lines.join('\n');
   }
@@ -514,7 +518,8 @@ class _ReaderScreenState extends State<ReaderScreen>
   }
 
   bool _isTranslationAnnotation(BookAnnotation annotation) {
-    return annotation.note.contains('Перевод:');
+    return annotation.note.contains('Перевод:') ||
+        annotation.note.contains('Translation:');
   }
 
   Color get _readerBackgroundColor =>
@@ -564,7 +569,7 @@ class _ReaderScreenState extends State<ReaderScreen>
             .toList();
       });
     } catch (e) {
-      _showError('Ошибка обновления заметки: $e');
+      _showError('${context.tr('Ошибка обновления заметки')}: $e');
     }
   }
 
@@ -581,7 +586,7 @@ class _ReaderScreenState extends State<ReaderScreen>
             .toList();
       });
     } catch (e) {
-      _showError('Ошибка удаления заметки: $e');
+      _showError('${context.tr('Ошибка удаления заметки')}: $e');
     }
   }
 
@@ -604,7 +609,7 @@ class _ReaderScreenState extends State<ReaderScreen>
         widget.bookId,
       );
     } catch (e) {
-      _showError('Ошибка загрузки заметок: $e');
+      _showError('${context.tr('Ошибка загрузки заметок')}: $e');
       return;
     }
     if (!mounted) return;
@@ -643,7 +648,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                     children: [
                       Expanded(
                         child: Text(
-                          'Выделения и заметки',
+                          context.tr('Выделения и заметки'),
                           style: TextStyle(
                             color: palette.text,
                             fontSize: 20,
@@ -675,7 +680,9 @@ class _ReaderScreenState extends State<ReaderScreen>
                     child: allAnnotations.isEmpty
                         ? Center(
                             child: Text(
-                              'Выделите текст в книге, и он появится здесь.',
+                              context.tr(
+                                'Выделите текст в книге, и он появится здесь.',
+                              ),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: palette.mutedText,
@@ -757,8 +764,7 @@ class _ReaderScreenState extends State<ReaderScreen>
     if (_showControls &&
         direction != ScrollDirection.idle &&
         _scrollController.offset > 8) {
-      setState(() => _showControls = false);
-      _animController.reverse();
+      _hideReaderControls();
     }
     final maxScroll = _scrollController.position.maxScrollExtent;
     if (maxScroll <= 0) {
@@ -798,7 +804,9 @@ class _ReaderScreenState extends State<ReaderScreen>
         builder: (_) => AudioPlayerScreen(
           token: widget.token,
           bookId: widget.bookId,
-          title: _bookTitle.isEmpty ? 'Книга #${widget.bookId}' : _bookTitle,
+          title: _bookTitle.isEmpty
+              ? '${context.tr('Книга')} #${widget.bookId}'
+              : _bookTitle,
           author: _bookAuthor,
           coverUrl: _bookCoverUrl,
           initialSegmentOrder: _currentChapter,
@@ -841,7 +849,9 @@ class _ReaderScreenState extends State<ReaderScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            savedRating == 0 ? 'Оценка удалена' : 'Оценка сохранена',
+            savedRating == 0
+                ? context.tr('Оценка удалена')
+                : context.tr('Оценка сохранена'),
           ),
           backgroundColor: context.palette.success,
         ),
@@ -853,7 +863,7 @@ class _ReaderScreenState extends State<ReaderScreen>
         _isRatingSaving = false;
       });
       setModalState?.call(() {});
-      _showError('Ошибка сохранения оценки: $e');
+      _showError('${context.tr('Ошибка сохранения оценки')}: $e');
     }
   }
 
@@ -901,7 +911,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Оценить книгу',
+                    context.tr('Оценить книгу'),
                     style: TextStyle(
                       color: currentPalette.text,
                       fontSize: 20,
@@ -910,7 +920,9 @@ class _ReaderScreenState extends State<ReaderScreen>
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    _bookTitle.isEmpty ? 'Книга #${widget.bookId}' : _bookTitle,
+                    _bookTitle.isEmpty
+                        ? '${context.tr('Книга')} #${widget.bookId}'
+                        : _bookTitle,
                     style: TextStyle(color: currentPalette.mutedText),
                   ),
                   const SizedBox(height: 20),
@@ -924,7 +936,10 @@ class _ReaderScreenState extends State<ReaderScreen>
                             children: [
                               for (var rating = 1; rating <= 5; rating++)
                                 IconButton(
-                                  tooltip: '$rating из 5',
+                                  tooltip: context.tr(
+                                    '$rating из 5',
+                                    en: '$rating of 5',
+                                  ),
                                   onPressed: () =>
                                       _saveRating(rating, setModalState),
                                   iconSize: 42,
@@ -942,8 +957,11 @@ class _ReaderScreenState extends State<ReaderScreen>
                   Center(
                     child: Text(
                       _userRating == 0
-                          ? '0: прочитано без оценки'
-                          : 'Ваша оценка: $_userRating из 5',
+                          ? context.tr('0: прочитано без оценки')
+                          : context.tr(
+                              'Ваша оценка: $_userRating из 5',
+                              en: 'Your rating: $_userRating of 5',
+                            ),
                       style: TextStyle(color: currentPalette.mutedText),
                     ),
                   ),
@@ -956,13 +974,37 @@ class _ReaderScreenState extends State<ReaderScreen>
     );
   }
 
-  void _toggleControls() {
-    setState(() => _showControls = !_showControls);
-    if (_showControls) {
-      _animController.forward();
-    } else {
-      _animController.reverse();
+  void _showReaderControls() {
+    if (_showControls) return;
+    setState(() => _showControls = true);
+    _animController.forward();
+  }
+
+  void _hideReaderControls() {
+    if (!_showControls) return;
+    setState(() => _showControls = false);
+    _animController.reverse();
+  }
+
+  void _handleReaderPointerDown(PointerDownEvent event) {
+    _readerPointerDownPosition = event.position;
+    _readerPointerMoved = false;
+  }
+
+  void _handleReaderPointerMove(PointerMoveEvent event) {
+    final start = _readerPointerDownPosition;
+    if (start == null) return;
+    if ((event.position - start).distance > 8) {
+      _readerPointerMoved = true;
     }
+  }
+
+  void _handleReaderPointerUp(PointerUpEvent event) {
+    if (!_readerPointerMoved) {
+      _showReaderControls();
+    }
+    _readerPointerDownPosition = null;
+    _readerPointerMoved = false;
   }
 
   @override
@@ -975,7 +1017,7 @@ class _ReaderScreenState extends State<ReaderScreen>
               backgroundColor: palette.surface,
               elevation: 0,
               title: Text(
-                _chapter?['title'] ?? 'Глава $_currentChapter',
+                _chapter?['title'] ?? context.chapterLabel(_currentChapter),
                 style: TextStyle(fontSize: 16, color: palette.text),
               ),
               leading: IconButton(
@@ -986,7 +1028,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                 if (_bookHasAudio)
                   IconButton(
                     icon: Icon(Icons.headphones_rounded, color: palette.accent),
-                    tooltip: 'Слушать',
+                    tooltip: context.tr('Слушать'),
                     onPressed: _openAudioFromReader,
                   ),
                 IconButton(
@@ -996,7 +1038,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                         : Icons.star_border_rounded,
                     color: _userRating > 0 ? palette.warning : palette.accent,
                   ),
-                  tooltip: 'Оценка',
+                  tooltip: context.tr('Оценка'),
                   onPressed: _showRatingSheet,
                 ),
                 IconButton(
@@ -1019,7 +1061,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                         ),
                     ],
                   ),
-                  tooltip: 'Выделения',
+                  tooltip: context.tr('Выделения'),
                   onPressed: _openAnnotationsSheet,
                 ),
                 IconButton(
@@ -1036,9 +1078,11 @@ class _ReaderScreenState extends State<ReaderScreen>
                 strokeWidth: 2.5,
               ),
             )
-          : GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _toggleControls,
+          : Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: _handleReaderPointerDown,
+              onPointerMove: _handleReaderPointerMove,
+              onPointerUp: _handleReaderPointerUp,
               child: Container(
                 decoration: BoxDecoration(
                   color: _customReaderBackgroundColor == null
@@ -1093,7 +1137,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Глава $_currentChapter',
+                                    context.chapterLabel(_currentChapter),
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: palette.accent,
@@ -1103,7 +1147,8 @@ class _ReaderScreenState extends State<ReaderScreen>
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    _chapter?['title'] ?? 'Без названия',
+                                    _chapter?['title'] ??
+                                        context.tr('Без названия'),
                                     style: _readerTextStyle(
                                       TextStyle(
                                         fontSize: _fontSize + 6,
@@ -1155,7 +1200,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                                       color: palette.accent,
                                     ),
                                     label: Text(
-                                      'Выделить',
+                                      context.tr('Выделить'),
                                       style: TextStyle(
                                         color: palette.text,
                                         fontWeight: FontWeight.bold,
@@ -1182,7 +1227,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                                           : palette.mutedText,
                                     ),
                                     label: Text(
-                                      'Цитата',
+                                      context.tr('Цитата'),
                                       style: TextStyle(
                                         color:
                                             _wordCount(_selectedText) <=
@@ -1216,7 +1261,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                                             color: palette.accent,
                                           ),
                                     label: Text(
-                                      'Словарь',
+                                      context.tr('Словарь'),
                                       style: TextStyle(
                                         color: _isLookupLoading
                                             ? palette.mutedText
@@ -1276,7 +1321,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                                     Expanded(
                                       child: _buildChapterNavButton(
                                         icon: Icons.arrow_back_rounded,
-                                        label: 'Назад',
+                                        label: context.tr('Назад'),
                                         enabled: _currentChapter > 1,
                                         accent: false,
                                         onPressed: _prevChapter,
@@ -1310,7 +1355,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                                     Expanded(
                                       child: _buildChapterNavButton(
                                         icon: Icons.arrow_forward_rounded,
-                                        label: 'Вперёд',
+                                        label: context.tr('Вперёд'),
                                         enabled:
                                             _currentChapter < _totalChapters,
                                         accent: true,
@@ -1450,7 +1495,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      'Глава ${annotation.chapterOrder}',
+                      context.chapterLabel(annotation.chapterOrder),
                       style: TextStyle(
                         color: annotationColor,
                         fontSize: 12,
@@ -1545,7 +1590,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'Настройки чтения',
+                        context.tr('Настройки чтения'),
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -1561,7 +1606,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                       const SizedBox(height: 24),
                       _buildReaderSliderRow(
                         icon: Icons.format_size,
-                        label: 'Размер шрифта',
+                        label: context.tr('Размер шрифта'),
                         value: _fontSize,
                         min: 14,
                         max: 28,
@@ -1575,7 +1620,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                       const SizedBox(height: 24),
                       _buildReaderSliderRow(
                         icon: Icons.brightness_6,
-                        label: 'Яркость',
+                        label: context.tr('Яркость'),
                         value: _brightness,
                         min: 0.5,
                         max: 1.0,
@@ -1637,7 +1682,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Шрифт',
+                    context.tr('Шрифт'),
                     style: TextStyle(
                       color: palette.text.withValues(alpha: 0.8),
                       fontSize: 14,
@@ -1701,7 +1746,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Дополнительно',
+                    context.tr('Дополнительно'),
                     style: TextStyle(
                       color: palette.text.withValues(alpha: 0.8),
                       fontSize: 14,
@@ -1709,7 +1754,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Отступы и цвета',
+                    context.tr('Отступы и цвета'),
                     style: TextStyle(
                       color: palette.text,
                       fontSize: 18,
@@ -1735,7 +1780,7 @@ class _ReaderScreenState extends State<ReaderScreen>
         onPressed: () => _confirmResetReaderSettings(refreshSheet),
         icon: Icon(Icons.restart_alt_rounded, size: 17, color: palette.danger),
         label: Text(
-          'Вернуть настройки чтения по умолчанию',
+          context.tr('Вернуть настройки чтения по умолчанию'),
           style: TextStyle(
             color: palette.danger,
             fontSize: 12,
@@ -1914,21 +1959,29 @@ class _ReaderScreenState extends State<ReaderScreen>
         return AlertDialog(
           backgroundColor: palette.elevated,
           title: Text(
-            'Сбросить настройки?',
+            context.tr('Сбросить настройки?'),
             style: TextStyle(color: palette.text),
           ),
           content: Text(
-            'Шрифт, размер, яркость, отступы и цвета чтения вернутся по умолчанию.',
+            context.tr(
+              'Шрифт, размер, яркость, отступы и цвета чтения вернутся по умолчанию.',
+            ),
             style: TextStyle(color: palette.mutedText),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text('Отмена', style: TextStyle(color: palette.mutedText)),
+              child: Text(
+                context.tr('Отмена'),
+                style: TextStyle(color: palette.mutedText),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text('Сбросить', style: TextStyle(color: palette.danger)),
+              child: Text(
+                context.tr('Сбросить'),
+                style: TextStyle(color: palette.danger),
+              ),
             ),
           ],
         );
@@ -2053,7 +2106,7 @@ const List<_ReaderFontOption> _readerFontOptions = [
     name: 'PT Serif',
     family: 'PT Serif',
     note: 'Strong Cyrillic support',
-    sample: 'Русский текст остается плотным и хорошо читаемым.',
+    sample: 'Russian and Cyrillic text stays dense and easy to read.',
   ),
   _ReaderFontOption(
     name: 'Spectral',
@@ -2147,7 +2200,7 @@ class _ReaderFontPickerScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Шрифт чтения',
+          context.tr('Шрифт чтения'),
           style: TextStyle(color: palette.text, fontWeight: FontWeight.bold),
         ),
       ),
@@ -2342,7 +2395,7 @@ class _ReaderAdditionalSettingsScreenState
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Дополнительно',
+          context.tr('Дополнительно'),
           style: TextStyle(color: palette.text, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -2359,7 +2412,7 @@ class _ReaderAdditionalSettingsScreenState
               ),
             ),
             child: Text(
-              'Готово',
+              context.tr('Готово'),
               style: TextStyle(
                 color: palette.accent,
                 fontWeight: FontWeight.w800,
@@ -2371,9 +2424,9 @@ class _ReaderAdditionalSettingsScreenState
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
         children: [
-          _SettingsSectionLabel('Отступы'),
+          _SettingsSectionLabel(context.tr('Отступы')),
           _SectionResetButton(
-            label: 'Вернуть отступы по умолчанию',
+            label: context.tr('Вернуть отступы по умолчанию'),
             onPressed: () => setState(() {
               _horizontalPadding = 24;
               _verticalPadding = 24;
@@ -2390,7 +2443,7 @@ class _ReaderAdditionalSettingsScreenState
           const SizedBox(height: 20),
           _PaddingSliderCard(
             icon: Icons.swap_horiz_rounded,
-            label: 'Горизонтальные',
+            label: context.tr('Горизонтальные'),
             value: _horizontalPadding,
             min: 12,
             max: 56,
@@ -2400,7 +2453,7 @@ class _ReaderAdditionalSettingsScreenState
           const SizedBox(height: 14),
           _PaddingSliderCard(
             icon: Icons.swap_vert_rounded,
-            label: 'Вертикальные',
+            label: context.tr('Вертикальные'),
             value: _verticalPadding,
             min: 12,
             max: 64,
@@ -2408,9 +2461,9 @@ class _ReaderAdditionalSettingsScreenState
             onChanged: (value) => setState(() => _verticalPadding = value),
           ),
           const SizedBox(height: 26),
-          _SettingsSectionLabel('Цвета'),
+          _SettingsSectionLabel(context.tr('Цвета')),
           _SectionResetButton(
-            label: 'Вернуть цвета по умолчанию',
+            label: context.tr('Вернуть цвета по умолчанию'),
             onPressed: () => setState(() {
               _backgroundColor = widget.defaultBackgroundColor;
               _fontColor = widget.defaultFontColor;
@@ -2420,28 +2473,28 @@ class _ReaderAdditionalSettingsScreenState
           ),
           const SizedBox(height: 10),
           _ReaderColorTile(
-            label: 'Фон',
+            label: context.tr('Фон'),
             color: _backgroundColor,
             recentColors: widget.recentColors,
             onChanged: (color) => setState(() => _backgroundColor = color),
           ),
           const SizedBox(height: 12),
           _ReaderColorTile(
-            label: 'Текст',
+            label: context.tr('Текст'),
             color: _fontColor,
             recentColors: widget.recentColors,
             onChanged: (color) => setState(() => _fontColor = color),
           ),
           const SizedBox(height: 12),
           _ReaderColorTile(
-            label: 'Выделение',
+            label: context.tr('Выделение'),
             color: _highlightColor,
             recentColors: widget.recentColors,
             onChanged: (color) => setState(() => _highlightColor = color),
           ),
           const SizedBox(height: 12),
           _ReaderColorTile(
-            label: 'Сохранённый перевод',
+            label: context.tr('Сохранённый перевод'),
             color: _translationColor,
             recentColors: widget.recentColors,
             onChanged: (color) => setState(() => _translationColor = color),
@@ -2780,7 +2833,7 @@ class _ReaderColorEditorState extends State<_ReaderColorEditor> {
       children: [
         if (widget.recentColors.isNotEmpty) ...[
           Text(
-            'Недавние',
+            context.tr('Недавние'),
             style: TextStyle(color: palette.mutedText, fontSize: 12),
           ),
           const SizedBox(height: 8),
@@ -3283,23 +3336,29 @@ class _ReviewsSheetState extends State<_ReviewsSheet> {
         final palette = context.palette;
         return AlertDialog(
           backgroundColor: palette.elevated,
-          title: Text('Ответить', style: TextStyle(color: palette.text)),
+          title: Text(
+            context.tr('Ответить'),
+            style: TextStyle(color: palette.text),
+          ),
           content: TextField(
             controller: controller,
             autofocus: true,
             minLines: 3,
             maxLines: 6,
             style: TextStyle(color: palette.text),
-            decoration: const InputDecoration(hintText: 'Ваш ответ'),
+            decoration: InputDecoration(hintText: context.tr('Ваш ответ')),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Отмена', style: TextStyle(color: palette.mutedText)),
+              child: Text(
+                context.tr('Отмена'),
+                style: TextStyle(color: palette.mutedText),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: const Text('Опубликовать'),
+              child: Text(context.tr('Опубликовать')),
             ),
           ],
         );
@@ -3365,7 +3424,7 @@ class _ReviewsSheetState extends State<_ReviewsSheet> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Отзывы',
+              context.tr('Отзывы'),
               style: TextStyle(
                 color: palette.text,
                 fontSize: 22,
@@ -3389,7 +3448,7 @@ class _ReviewsSheetState extends State<_ReviewsSheet> {
                   : _reviews.isEmpty
                   ? Center(
                       child: Text(
-                        'Пока нет отзывов.',
+                        context.tr('Пока нет отзывов.'),
                         style: TextStyle(color: palette.mutedText),
                       ),
                     )
@@ -3465,7 +3524,7 @@ class _ReviewComposer extends StatelessWidget {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Опубликовать'),
+                    : Text(context.tr('Опубликовать')),
               ),
             ],
           ),
@@ -3475,7 +3534,7 @@ class _ReviewComposer extends StatelessWidget {
             maxLines: 4,
             style: TextStyle(color: palette.text),
             decoration: InputDecoration(
-              hintText: 'Напишите отзыв',
+              hintText: context.tr('Напишите отзыв'),
               hintStyle: TextStyle(color: palette.mutedText),
               border: InputBorder.none,
             ),
@@ -3650,7 +3709,10 @@ class _ActionsRow extends StatelessWidget {
         TextButton.icon(
           onPressed: onReply,
           icon: Icon(Icons.reply_rounded, size: 18, color: palette.mutedText),
-          label: Text('Ответить', style: TextStyle(color: palette.mutedText)),
+          label: Text(
+            context.tr('Ответить'),
+            style: TextStyle(color: palette.mutedText),
+          ),
         ),
       ],
     );
@@ -3726,7 +3788,7 @@ class _ExpandableTextState extends State<_ExpandableText> {
           TextButton(
             onPressed: () => setState(() => _expanded = !_expanded),
             child: Text(
-              _expanded ? 'Скрыть' : 'Показать больше',
+              _expanded ? context.tr('Скрыть') : context.tr('Показать больше'),
               style: TextStyle(color: palette.accent),
             ),
           ),
@@ -3812,7 +3874,7 @@ class _QuotesSheetState extends State<_QuotesSheet> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Цитаты',
+              context.tr('Цитаты'),
               style: TextStyle(
                 color: palette.text,
                 fontSize: 22,
@@ -3828,7 +3890,7 @@ class _QuotesSheetState extends State<_QuotesSheet> {
                   : _quotes.isEmpty
                   ? Center(
                       child: Text(
-                        'Пока нет опубликованных цитат.',
+                        context.tr('Пока нет опубликованных цитат.'),
                         style: TextStyle(color: palette.mutedText),
                       ),
                     )
@@ -3892,7 +3954,7 @@ class _QuoteCardState extends State<_QuoteCard> {
             if (_showDetails) ...[
               const SizedBox(height: 10),
               Text(
-                'Глава ${quote.chapterOrder} · ${quote.nickname}',
+                '${context.chapterLabel(quote.chapterOrder)} · ${quote.nickname}',
                 style: TextStyle(color: palette.mutedText, fontSize: 12),
               ),
             ],
@@ -4033,7 +4095,7 @@ class _LookupSheetState extends State<_LookupSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Словарь',
+                        context.tr('Словарь'),
                         style: TextStyle(
                           color: palette.text,
                           fontSize: 20,
@@ -4061,7 +4123,7 @@ class _LookupSheetState extends State<_LookupSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _LookupSection(
-                      title: 'Выделено',
+                      title: context.tr('Выделено'),
                       child: Text(
                         widget.selectedText,
                         style: TextStyle(
@@ -4073,10 +4135,12 @@ class _LookupSheetState extends State<_LookupSheet> {
                     ),
                     const SizedBox(height: 12),
                     _LookupSection(
-                      title: 'Определения',
+                      title: context.tr('Определения'),
                       child: result.definitions.isEmpty
                           ? Text(
-                              'Для фраз показывается только перевод. Для слова определение может отсутствовать в источнике.',
+                              context.tr(
+                                'Для фраз показывается только перевод. Для слова определение может отсутствовать в источнике.',
+                              ),
                               style: TextStyle(
                                 color: palette.mutedText,
                                 height: 1.35,
@@ -4097,7 +4161,7 @@ class _LookupSheetState extends State<_LookupSheet> {
                     ),
                     const SizedBox(height: 12),
                     _LookupSection(
-                      title: 'Перевод',
+                      title: context.tr('Перевод'),
                       child: hasTranslation
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -4113,7 +4177,7 @@ class _LookupSheetState extends State<_LookupSheet> {
                                 if (translationAlternatives.isNotEmpty) ...[
                                   const SizedBox(height: 10),
                                   Text(
-                                    'Варианты',
+                                    context.tr('Варианты'),
                                     style: TextStyle(
                                       color: palette.mutedText,
                                       fontSize: 12,
@@ -4152,14 +4216,14 @@ class _LookupSheetState extends State<_LookupSheet> {
                               ],
                             )
                           : Text(
-                              'Перевод сейчас недоступен.',
+                              context.tr('Перевод сейчас недоступен.'),
                               style: TextStyle(color: palette.mutedText),
                             ),
                     ),
                     if (result.errors.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       _LookupSection(
-                        title: 'Статус',
+                        title: context.tr('Статус'),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -4191,7 +4255,7 @@ class _LookupSheetState extends State<_LookupSheet> {
                         ? null
                         : () => Navigator.of(context).pop(),
                     child: Text(
-                      'Закрыть',
+                      context.tr('Закрыть'),
                       style: TextStyle(color: palette.mutedText),
                     ),
                   ),
@@ -4210,7 +4274,7 @@ class _LookupSheetState extends State<_LookupSheet> {
                             ),
                           )
                         : const Icon(Icons.bookmark_add_rounded),
-                    label: const Text('Сохранить'),
+                    label: Text(context.tr('Сохранить')),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFD166),
                       foregroundColor: const Color(0xFF1B1B1B),
@@ -4376,7 +4440,7 @@ class _AnnotationNoteSheetState extends State<_AnnotationNoteSheet> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Заметка к выделению',
+                context.tr('Заметка к выделению'),
                 style: TextStyle(
                   color: palette.text,
                   fontSize: 20,
@@ -4411,7 +4475,9 @@ class _AnnotationNoteSheetState extends State<_AnnotationNoteSheet> {
                 maxLines: 5,
                 style: TextStyle(color: palette.text),
                 decoration: InputDecoration(
-                  hintText: 'Добавьте мысль, вопрос или короткую заметку...',
+                  hintText: context.tr(
+                    'Добавьте мысль, вопрос или короткую заметку...',
+                  ),
                   hintStyle: TextStyle(
                     color: palette.mutedText.withValues(alpha: 0.70),
                   ),
@@ -4440,7 +4506,7 @@ class _AnnotationNoteSheetState extends State<_AnnotationNoteSheet> {
                     child: TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: Text(
-                        'Позже',
+                        context.tr('Позже'),
                         style: TextStyle(color: palette.mutedText),
                       ),
                     ),
@@ -4458,7 +4524,7 @@ class _AnnotationNoteSheetState extends State<_AnnotationNoteSheet> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Сохранить'),
+                      child: Text(context.tr('Сохранить')),
                     ),
                   ),
                 ],

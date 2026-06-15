@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ebookreader/services/book_service.dart';
 import 'package:ebookreader/services/bookmark_service.dart';
 import 'package:ebookreader/services/recommendation_service.dart';
-import 'package:ebookreader/services/user_service.dart';
 import 'package:ebookreader/screens/reader/reader_screen.dart';
 import 'package:ebookreader/screens/audio/audio_player_screen.dart';
 import 'package:ebookreader/constants/api_constants.dart';
@@ -34,15 +33,12 @@ class _BookDetailScreenState extends State<BookDetailScreen>
     with SingleTickerProviderStateMixin {
   final BookService _bookService = BookService();
   final BookmarkService _bookmarkService = BookmarkService();
-  final UserService _userService = UserService();
   final RecommendationService _recommendationService = RecommendationService();
 
   Map<String, dynamic>? _book;
   List<dynamic> _chapters = [];
   bool _isLoading = true;
   bool _isBookmarked = false;
-  bool _audioSubscriptionActive = false;
-  bool _isSubscriptionSaving = false;
   bool _isRatingSaving = false;
   bool _isMarkReadSaving = false;
   bool _isSimilarLoading = false;
@@ -88,12 +84,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
         widget.token,
         widget.bookId,
       );
-      final profile = await _userService.getProfile(widget.token);
-
       setState(() {
         _book = book;
         _chapters = chapters;
-        _audioSubscriptionActive = profile['audioSubscriptionActive'] == true;
         _currentChapter =
             progress['segmentOrder'] ?? progress['currentChapter'] ?? 1;
         _segmentProgress = _asDouble(progress['segmentProgress']);
@@ -117,7 +110,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
               children: [
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 12),
-                Expanded(child: Text('Ошибка загрузки: $e')),
+                Expanded(
+                  child: Text('${context.tr('Ошибка', en: 'Error')}: $e'),
+                ),
               ],
             ),
             backgroundColor: Colors.red.shade600,
@@ -138,11 +133,14 @@ class _BookDetailScreenState extends State<BookDetailScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Row(
+              content: Row(
                 children: [
-                  Icon(Icons.library_add_check_outlined, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text('Удалено из сохранённых'),
+                  const Icon(
+                    Icons.library_add_check_outlined,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(context.tr('Удалено из сохранённых')),
                 ],
               ),
               backgroundColor: Colors.orange.shade600,
@@ -159,11 +157,11 @@ class _BookDetailScreenState extends State<BookDetailScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Row(
+              content: Row(
                 children: [
-                  Icon(Icons.library_add_check, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text('Книга сохранена'),
+                  const Icon(Icons.library_add_check, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Text(context.tr('Книга сохранена')),
                 ],
               ),
               backgroundColor: Colors.green.shade600,
@@ -179,9 +177,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
       setState(() => _isBookmarked = !_isBookmarked);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${context.tr('Ошибка', en: 'Error')}: $e')),
+        );
       }
     }
   }
@@ -231,7 +229,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            savedRating == 0 ? 'Оценка удалена' : 'Оценка сохранена',
+            savedRating == 0
+                ? context.tr('Оценка удалена')
+                : context.tr('Оценка сохранена'),
           ),
           backgroundColor: context.palette.success,
         ),
@@ -244,7 +244,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка сохранения оценки: $e'),
+          content: Text(
+            '${context.tr('Ошибка сохранения оценки', en: 'Rating saving error')}: $e',
+          ),
           backgroundColor: context.palette.danger,
         ),
       );
@@ -269,7 +271,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Книга отмечена как прочитанная'),
+          content: Text(context.tr('Книга отмечена как прочитанная')),
           backgroundColor: context.palette.success,
         ),
       );
@@ -278,7 +280,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
       setState(() => _isMarkReadSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка отметки книги: $e'),
+          content: Text(
+            '${context.tr('Ошибка отметки книги', en: 'Book status error')}: $e',
+          ),
           backgroundColor: context.palette.danger,
         ),
       );
@@ -312,7 +316,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
 
   Future<bool?> _showSpoilerGate(String kind) async {
     final palette = context.palette;
-    final title = kind == 'reviews' ? 'Отзывы' : 'Цитаты';
+    final title = kind == 'reviews'
+        ? context.tr('Отзывы могут содержать спойлеры')
+        : context.tr('Цитаты могут содержать спойлеры');
     bool acknowledged = false;
     bool armed = false;
 
@@ -348,7 +354,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    '$title могут содержать спойлеры',
+                    title,
                     style: TextStyle(
                       color: palette.text,
                       fontSize: 20,
@@ -357,7 +363,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Здесь читатели обсуждают конкретные моменты книги. Откройте этот раздел только если точно готовы.',
+                    context.tr(
+                      'Здесь читатели обсуждают конкретные моменты книги. Откройте этот раздел только если точно готовы.',
+                    ),
                     style: TextStyle(color: palette.mutedText, height: 1.4),
                   ),
                   const SizedBox(height: 18),
@@ -370,7 +378,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                     contentPadding: EdgeInsets.zero,
                     activeColor: palette.accent,
                     title: Text(
-                      'Я понимаю, что здесь будут спойлеры',
+                      context.tr('Я понимаю, что здесь будут спойлеры'),
                       style: TextStyle(color: palette.text),
                     ),
                   ),
@@ -381,7 +389,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                         child: TextButton(
                           onPressed: () => Navigator.pop(context, false),
                           child: Text(
-                            'Не открывать',
+                            context.tr('Не открывать'),
                             style: TextStyle(color: palette.mutedText),
                           ),
                         ),
@@ -405,7 +413,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                             foregroundColor: Colors.white,
                           ),
                           child: Text(
-                            armed ? 'Открыть всё равно' : 'Продолжить',
+                            armed
+                                ? context.tr('Открыть всё равно')
+                                : context.tr('Продолжить'),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -442,18 +452,13 @@ class _BookDetailScreenState extends State<BookDetailScreen>
   }
 
   Future<void> _openAudioPlayer() async {
-    if (!_isDemoAudiobook && !_audioSubscriptionActive) {
-      final activated = await _showAudioPaywall();
-      if (!activated || !mounted) return;
-    }
-
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => AudioPlayerScreen(
           token: widget.token,
           bookId: widget.bookId,
-          title: _book?['title'] ?? 'Без названия',
+          title: _book?['title'] ?? context.tr('Без названия'),
           author: authorLabel(_book?['author']),
           coverUrl: _book?['coverUrl']?.toString() ?? '',
           initialSegmentOrder: _currentChapter,
@@ -463,79 +468,6 @@ class _BookDetailScreenState extends State<BookDetailScreen>
         ),
       ),
     ).then((_) => _loadBookDetails());
-  }
-
-  Future<bool> _showAudioPaywall() async {
-    final palette = context.palette;
-    final shouldActivate = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: palette.elevated,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Row(
-          children: [
-            Icon(Icons.workspace_premium_rounded, color: palette.accent),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Audio Premium',
-                style: TextStyle(color: palette.text),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'Аудиокниги доступны по подписке. Для демо можно активировать доступ без оплаты.',
-          style: TextStyle(color: palette.text.withValues(alpha: 0.78)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text('Позже', style: TextStyle(color: palette.mutedText)),
-          ),
-          FilledButton(
-            onPressed: _isSubscriptionSaving
-                ? null
-                : () => Navigator.pop(dialogContext, true),
-            child: const Text('Активировать демо'),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldActivate != true) {
-      return false;
-    }
-
-    setState(() => _isSubscriptionSaving = true);
-    try {
-      final response = await _userService.updateAudioSubscription(
-        widget.token,
-        true,
-      );
-      if (!mounted) return false;
-      setState(() {
-        _audioSubscriptionActive = response['audioSubscriptionActive'] == true;
-        _isSubscriptionSaving = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Аудиоподписка активирована'),
-          backgroundColor: palette.success,
-        ),
-      );
-      return _audioSubscriptionActive;
-    } catch (e) {
-      if (!mounted) return false;
-      setState(() => _isSubscriptionSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Ошибка подписки: $e'),
-          backgroundColor: palette.danger,
-        ),
-      );
-      return false;
-    }
   }
 
   bool get _hasText {
@@ -548,24 +480,19 @@ class _BookDetailScreenState extends State<BookDetailScreen>
     return availability == 'AUDIO' || availability == 'SYNCED';
   }
 
-  bool get _isDemoAudiobook => {
-    '269322',
-    'pg-ru-21183',
-  }.contains((_book?['goodreadsId'] ?? '').toString());
-
   String _availabilityLabel() {
     final availability = (_book?['availability'] ?? 'METADATA_ONLY').toString();
     switch (availability) {
       case 'TEXT':
-        return 'Есть текст';
+        return context.tr('Есть текст');
       case 'AUDIO':
-        return 'Есть аудио';
+        return context.tr('Есть аудио');
       case 'SYNCED':
-        return 'Текст + аудио';
+        return context.tr('Текст + аудио');
       case 'PDF_ONLY':
-        return 'PDF без синхронизации';
+        return context.tr('PDF без синхронизации');
       default:
-        return 'Метаданные';
+        return context.tr('Метаданные');
     }
   }
 
@@ -611,11 +538,11 @@ class _BookDetailScreenState extends State<BookDetailScreen>
         backgroundColor: palette.background,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          title: const Text('Ошибка'),
+          title: Text(context.tr('Ошибка', en: 'Error')),
         ),
         body: Center(
           child: Text(
-            'Книга не найдена',
+            context.tr('Книга не найдена'),
             style: TextStyle(color: palette.text),
           ),
         ),
@@ -745,7 +672,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                         child: Column(
                           children: [
                             Text(
-                              _book!['title'] ?? 'Без названия',
+                              _book!['title'] ?? context.tr('Без названия'),
                               style: TextStyle(
                                 color: palette.text,
                                 fontSize: 28,
@@ -772,11 +699,13 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                               children: [
                                 if (_detailGenres().isNotEmpty)
                                   for (final genre in _detailGenres().take(2))
-                                    _buildInfoChip(genreLabel(genre)),
+                                    _buildInfoChip(context.genreLabel(genre)),
                                 _buildLanguageChip(_bookLanguage()),
                                 _buildInfoChip(_availabilityLabel()),
                                 if (_bookPages() > 0)
-                                  _buildInfoChip('${_bookPages()} стр.'),
+                                  _buildInfoChip(
+                                    context.pagesCount(_bookPages()),
+                                  ),
                                 if ((_book!['average_rating'] ??
                                         _book!['averageRating'] ??
                                         0) !=
@@ -789,12 +718,17 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                                         0) !=
                                     0)
                                   _buildInfoChip(
-                                    '${(_book!['ratings_count'] ?? _book!['ratingsCount']).toString()} оценок',
+                                    context.ratingsCount(
+                                      int.tryParse(
+                                            (_book!['ratings_count'] ??
+                                                    _book!['ratingsCount'])
+                                                .toString(),
+                                          ) ??
+                                          0,
+                                    ),
                                   ),
                                 _buildInfoChip(
-                                  _chapters.isEmpty
-                                      ? 'Нет глав'
-                                      : '${_chapters.length} глав',
+                                  context.chaptersCount(_chapters.length),
                                 ),
                               ],
                             ),
@@ -818,8 +752,10 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                             child: _buildActionButton(
                               icon: Icons.menu_book_rounded,
                               label: _currentChapter > 1
-                                  ? 'Читать $_currentChapter сегм.'
-                                  : 'Читать',
+                                  ? context.appLanguage.isEnglish
+                                        ? 'Read segment $_currentChapter'
+                                        : 'Читать $_currentChapter сегм.'
+                                  : context.tr('Читать'),
                               enabled: _hasText && _chapters.isNotEmpty,
                               onPressed: () => _openReader(_currentChapter),
                             ),
@@ -827,13 +763,8 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                           const SizedBox(width: 12),
                           Expanded(
                             child: _buildActionButton(
-                              icon: _audioSubscriptionActive || _isDemoAudiobook
-                                  ? Icons.headphones_rounded
-                                  : Icons.lock_rounded,
-                              label:
-                                  _audioSubscriptionActive || _isDemoAudiobook
-                                  ? 'Слушать'
-                                  : 'Premium',
+                              icon: Icons.headphones_rounded,
+                              label: context.tr('Слушать'),
                               enabled: _hasAudio,
                               onPressed: _openAudioPlayer,
                             ),
@@ -890,7 +821,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Описание',
+                        context.tr('Описание'),
                         style: TextStyle(
                           color: palette.text,
                           fontSize: 20,
@@ -899,7 +830,8 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        _book!['description'] ?? 'Описание отсутствует',
+                        _book!['description'] ??
+                            context.tr('Описание отсутствует'),
                         style: TextStyle(
                           color: palette.text.withValues(alpha: 0.76),
                           fontSize: 15,
@@ -975,7 +907,8 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                                 ),
                               ),
                               title: Text(
-                                chapter['title'] ?? 'Глава $chapterNum',
+                                chapter['title'] ??
+                                    context.chapterLabel(chapterNum),
                                 style: TextStyle(
                                   color: isCurrent
                                       ? palette.onAccent
@@ -1033,7 +966,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                                 ),
                                 const SizedBox(height: 20),
                                 Text(
-                                  'Главы отсутствуют',
+                                  context.tr('Главы отсутствуют'),
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -1042,7 +975,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Эта книга пока не содержит глав для чтения',
+                                  context.tr(
+                                    'Эта книга пока не содержит глав для чтения',
+                                  ),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 14,
@@ -1128,7 +1063,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
     final raw =
         _book!['language'] ?? _book!['languageCode'] ?? _book!['language_code'];
     if (raw == null || raw.toString().trim().isEmpty) {
-      return 'не указан';
+      return context.tr('не указан');
     }
     return _languageLabel(raw.toString());
   }
@@ -1146,12 +1081,12 @@ class _BookDetailScreenState extends State<BookDetailScreen>
       case 'rus':
       case 'русский':
       case 'russian':
-        return 'Русский';
+        return context.appLanguage.isEnglish ? 'Russian' : 'Русский';
       case 'kk':
       case 'kaz':
       case 'kazakh':
       case 'қазақша':
-        return 'Қазақша';
+        return context.appLanguage.isEnglish ? 'Kazakh' : 'Қазақша';
       case 'es':
       case 'spa':
       case 'español':
@@ -1245,7 +1180,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
             ),
             const SizedBox(width: 12),
             Text(
-              'Подбираем похожие книги',
+              context.tr('Подбираем похожие книги'),
               style: TextStyle(color: palette.text),
             ),
           ],
@@ -1266,7 +1201,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
               Icon(Icons.auto_awesome_rounded, color: palette.accent, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Похожие книги',
+                context.tr('Похожие книги'),
                 style: TextStyle(
                   color: palette.text,
                   fontSize: 17,
@@ -1346,7 +1281,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              book['title']?.toString() ?? 'Без названия',
+              book['title']?.toString() ?? context.tr('Без названия'),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -1357,7 +1292,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
             ),
             const SizedBox(height: 2),
             Text(
-              item['reason']?.toString() ?? 'AI match',
+              _localizedReason(item['reason']?.toString() ?? 'AI match'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: palette.accent, fontSize: 11),
@@ -1366,6 +1301,20 @@ class _BookDetailScreenState extends State<BookDetailScreen>
         ),
       ),
     );
+  }
+
+  String _localizedReason(String reason) {
+    final normalized = reason.trim().toLowerCase();
+    if (normalized.contains('жанр') || normalized.contains('genre')) {
+      return context.tr('Похожий жанр', en: 'Similar genre');
+    }
+    if (normalized.contains('автор') || normalized.contains('author')) {
+      return context.tr('Похожий автор', en: 'Similar author');
+    }
+    if (normalized.contains('похож')) {
+      return context.tr('Похожая книга', en: 'Similar book');
+    }
+    return context.tr(reason, en: reason);
   }
 
   BoxDecoration _softPanelDecoration() {
@@ -1383,7 +1332,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
       children: [
         _buildCommunityTabButton(
           icon: Icons.rate_review_rounded,
-          label: 'Отзывы',
+          label: context.tr('Отзывы'),
           selected: _selectedDetailSection == 'reviews',
           onTap: () => _selectDetailSection('reviews'),
         ),
@@ -1424,7 +1373,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      'Главы',
+                      context.tr('Главы'),
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: _selectedDetailSection == 'chapters'
@@ -1454,7 +1403,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
         const SizedBox(width: 10),
         _buildCommunityTabButton(
           icon: Icons.format_quote_rounded,
-          label: 'Цитаты',
+          label: context.tr('Цитаты'),
           selected: _selectedDetailSection == 'quotes',
           onTap: () => _selectDetailSection('quotes'),
         ),
@@ -1558,7 +1507,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ваша оценка',
+                  context.tr('Ваша оценка'),
                   style: TextStyle(
                     color: palette.text,
                     fontWeight: FontWeight.w700,
@@ -1567,7 +1516,12 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                 const SizedBox(height: 2),
                 Text(
                   _userRating == 0
-                      ? '0: прочитано без оценки'
+                      ? context.tr(
+                          '0: прочитано без оценки',
+                          en: '0: read without rating',
+                        )
+                      : context.appLanguage.isEnglish
+                      ? '$_userRating out of 5'
                       : '$_userRating из 5',
                   style: TextStyle(color: palette.mutedText, fontSize: 12),
                 ),
@@ -1626,7 +1580,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                 ),
               )
             : const Icon(Icons.done_all_rounded),
-        label: const Text('Отметить как прочитанное'),
+        label: Text(context.tr('Отметить как прочитанное')),
         style: FilledButton.styleFrom(
           backgroundColor: palette.accent,
           foregroundColor: palette.onAccent,

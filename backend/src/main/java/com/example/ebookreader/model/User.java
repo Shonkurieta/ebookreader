@@ -39,9 +39,6 @@ public class User {
     @Column(name = "auth_provider")
     private String authProvider = "LOCAL";
 
-    @Column
-    private Boolean audioSubscriptionActive = false;
-
     // 🔹 Добавлено: связь с user_books
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore // ❗ предотвращает рекурсивную сериализацию
@@ -112,14 +109,6 @@ public class User {
 
     public void setAuthProvider(String authProvider) {
         this.authProvider = authProvider;
-    }
-
-    public boolean isAudioSubscriptionActive() {
-        return Boolean.TRUE.equals(audioSubscriptionActive);
-    }
-
-    public void setAudioSubscriptionActive(boolean audioSubscriptionActive) {
-        this.audioSubscriptionActive = audioSubscriptionActive;
     }
 
     public List<UserBook> getUserBooks() {

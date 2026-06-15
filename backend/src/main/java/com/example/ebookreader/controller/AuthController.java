@@ -23,11 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.ebookreader.config.JwtUtil;
 import com.example.ebookreader.dto.GoogleAuthRequest;
 import com.example.ebookreader.dto.LoginRequest;
+import com.example.ebookreader.dto.PasswordResetConfirmRequest;
+import com.example.ebookreader.dto.PasswordResetRequest;
 import com.example.ebookreader.dto.RegisterRequest;
 import com.example.ebookreader.exception.BadRequestException;
 import com.example.ebookreader.exception.UnauthorizedException;
 import com.example.ebookreader.model.User;
 import com.example.ebookreader.repository.UserRepository;
+import com.example.ebookreader.service.PasswordResetService;
 import com.example.ebookreader.service.google.GoogleAccount;
 import com.example.ebookreader.service.google.GoogleTokenVerifier;
 
@@ -52,6 +55,9 @@ public class AuthController {
 
     @Autowired
     private GoogleTokenVerifier googleTokenVerifier;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
 
     @Operation(summary = "Регистрация нового пользователя")
     @PostMapping("/register")
@@ -205,6 +211,39 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Ошибка обновления токена: " + e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Отправка кода восстановления пароля")
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<?> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        try {
+            passwordResetService.requestReset(request.getEmail());
+            return ResponseEntity.ok(Map.of(
+                    "message",
+                    "Если email зарегистрирован, код восстановления отправлен"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Не удалось отправить код восстановления"));
+        }
+    }
+
+    @Operation(summary = "Сброс пароля по коду из email")
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<?> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
+        try {
+            passwordResetService.confirmReset(
+                    request.getEmail(),
+                    request.getCode(),
+                    request.getNewPassword()
+            );
+            return ResponseEntity.ok(Map.of("message", "Пароль успешно изменён"));
+        } catch (BadRequestException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Не удалось изменить пароль"));
         }
     }
 

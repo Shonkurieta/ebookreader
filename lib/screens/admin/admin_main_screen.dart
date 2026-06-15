@@ -70,17 +70,23 @@ class _AdminMainScreenState extends State<AdminMainScreen>
             Positioned(
               top: MediaQuery.of(context).padding.top + 8,
               right: 14,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: palette.elevated.withValues(alpha: 0.72),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: palette.border),
-                ),
-                child: IconButton(
-                  tooltip: 'Тема приложения',
-                  onPressed: () => showAppThemeSheet(context),
-                  icon: Icon(Icons.palette_rounded, color: palette.accent),
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildTopIconButton(
+                    palette: palette,
+                    tooltip: context.tr('Тема приложения'),
+                    icon: Icons.palette_rounded,
+                    onPressed: () => showAppThemeSheet(context),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildTopIconButton(
+                    palette: palette,
+                    tooltip: context.tr('Язык интерфейса'),
+                    icon: Icons.language_rounded,
+                    onPressed: () => showAppLanguageSheet(context),
+                  ),
+                ],
               ),
             ),
           ],
@@ -119,17 +125,17 @@ class _AdminMainScreenState extends State<AdminMainScreen>
               children: [
                 _buildNavItem(
                   icon: Icons.auto_stories_rounded,
-                  label: 'Книги',
+                  label: context.tr('Книги'),
                   index: 0,
                 ),
                 _buildNavItem(
                   icon: Icons.people_rounded,
-                  label: 'Пользователи',
+                  label: context.tr('Пользователи'),
                   index: 1,
                 ),
                 _buildNavItem(
                   icon: Icons.person_rounded,
-                  label: 'Профиль',
+                  label: context.tr('Профиль'),
                   index: 2,
                 ),
               ],
@@ -264,6 +270,26 @@ class _AdminMainScreenState extends State<AdminMainScreen>
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildTopIconButton({
+    required AppPalette palette,
+    required String tooltip,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: palette.elevated.withValues(alpha: 0.72),
+        shape: BoxShape.circle,
+        border: Border.all(color: palette.border),
+      ),
+      child: IconButton(
+        tooltip: tooltip,
+        onPressed: onPressed,
+        icon: Icon(icon, color: palette.accent),
       ),
     );
   }

@@ -87,6 +87,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _playback.trackIndexNotifier.removeListener(_syncTrackIndex);
+    _playback.discardStuckLoad();
     _saveProgress();
     super.dispose();
   }
@@ -118,7 +119,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
         setState(() {
           _tracks = [];
           _isLoading = false;
-          _error = 'Для этой книги пока нет аудиотреков';
+          _error = context.tr('Для этой книги пока нет аудиотреков');
         });
         return;
       }
@@ -126,8 +127,16 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
       final initialIndex = tracks.indexWhere(
         (track) => track.segmentOrder == widget.initialSegmentOrder,
       );
+      if (initialIndex < 0) {
+        setState(() {
+          _tracks = tracks;
+          _isLoading = false;
+          _error = context.tr('Для этой главы пока нет аудио');
+        });
+        return;
+      }
       _tracks = tracks;
-      _trackIndex = initialIndex >= 0 ? initialIndex : 0;
+      _trackIndex = initialIndex;
 
       await _playback.load(
         token: widget.token,
@@ -151,7 +160,8 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _error = 'Ошибка загрузки аудио: $e';
+          _error =
+              '${context.tr('Ошибка загрузки аудио', en: 'Audio loading error')}: $e';
         });
       }
     }
@@ -225,7 +235,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'Аудиокнига',
+          context.tr('Аудиокнига'),
           style: TextStyle(
             color: palette.text,
             fontSize: 16,
@@ -392,7 +402,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
             border: Border.all(color: palette.border),
           ),
           child: Text(
-            'Сегмент ${_trackIndex + 1}/${_tracks.length}',
+            '${context.tr('Сегмент')} ${_trackIndex + 1}/${_tracks.length}',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: palette.mutedText,
@@ -482,7 +492,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
       children: [
         _roundControl(
           icon: Icons.skip_previous_rounded,
-          tooltip: 'Предыдущий сегмент',
+          tooltip: context.tr('Предыдущий сегмент'),
           onPressed: _trackIndex > 0 ? _playPreviousTrack : null,
           size: 48,
           iconSize: 32,
@@ -490,8 +500,8 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
         const SizedBox(width: 8),
         _roundControl(
           icon: Icons.replay_10_rounded,
-          tooltip: 'Назад на 15 секунд',
-          onPressed: () => _seekRelative(const Duration(seconds: -15)),
+          tooltip: context.tr('Назад на 10 секунд'),
+          onPressed: () => _seekRelative(const Duration(seconds: -10)),
           size: 52,
           iconSize: 31,
         ),
@@ -520,7 +530,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                 ],
               ),
               child: IconButton(
-                tooltip: playing ? 'Пауза' : 'Слушать',
+                tooltip: playing ? context.tr('Пауза') : context.tr('Слушать'),
                 onPressed: isBuffering
                     ? null
                     : () async {
@@ -528,7 +538,15 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                           await _player.pause();
                           await _saveProgress();
                         } else {
-                          await _player.play();
+                          try {
+                            await _playback.playWithStartupTimeout();
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            setState(() {
+                              _error =
+                                  '${context.tr('Не удалось запустить аудио')}: $error';
+                            });
+                          }
                         }
                       },
                 icon: isBuffering
@@ -554,15 +572,15 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
         const SizedBox(width: 14),
         _roundControl(
           icon: Icons.forward_10_rounded,
-          tooltip: 'Вперёд на 15 секунд',
-          onPressed: () => _seekRelative(const Duration(seconds: 15)),
+          tooltip: context.tr('Вперёд на 10 секунд'),
+          onPressed: () => _seekRelative(const Duration(seconds: 10)),
           size: 52,
           iconSize: 31,
         ),
         const SizedBox(width: 8),
         _roundControl(
           icon: Icons.skip_next_rounded,
-          tooltip: 'Следующий сегмент',
+          tooltip: context.tr('Следующий сегмент'),
           onPressed: _trackIndex < _tracks.length - 1 ? _playNextTrack : null,
           size: 48,
           iconSize: 32,
@@ -619,10 +637,10 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
             ),
           ),
           icon: const Icon(Icons.menu_book_rounded, size: 19),
-          label: const Text('Продолжить читать'),
+          label: Text(context.tr('Продолжить читать')),
         ),
         PopupMenuButton<double>(
-          tooltip: 'Скорость',
+          tooltip: context.tr('Скорость'),
           initialValue: _playbackSpeed,
           onSelected: _setPlaybackSpeed,
           itemBuilder: (_) => const [
@@ -696,7 +714,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Сейчас играет',
+                          context.tr('Сейчас играет'),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: palette.mutedText,
@@ -724,7 +742,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                         const SizedBox(height: 8),
                         Text(
                           widget.author.isEmpty
-                              ? 'Неизвестный автор'
+                              ? context.tr('Неизвестный автор')
                               : widget.author,
                           textAlign: TextAlign.center,
                           maxLines: 1,

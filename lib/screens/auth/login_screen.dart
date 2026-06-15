@@ -61,12 +61,15 @@ class _LoginScreenState extends State<LoginScreen>
     if (!isConnected) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.white),
-              SizedBox(width: 12),
+              const Icon(Icons.warning_amber_rounded, color: Colors.white),
+              const SizedBox(width: 12),
               Text(
-                'Не удается подключиться к серверу. Проверьте интернет-соединение',
+                context.tr(
+                  'Не удается подключиться к серверу. Проверьте интернет-соединение',
+                  en: 'Cannot connect to the server. Check your connection',
+                ),
               ),
             ],
           ),
@@ -113,14 +116,24 @@ class _LoginScreenState extends State<LoginScreen>
       await _ensureGoogleSignInInitialized();
 
       if (!GoogleSignIn.instance.supportsAuthenticate()) {
-        throw Exception('Google вход недоступен на этой платформе');
+        throw Exception(
+          context.tr(
+            'Google вход недоступен на этой платформе',
+            en: 'Google sign-in is not available on this platform',
+          ),
+        );
       }
 
       final account = await GoogleSignIn.instance.authenticate();
       final idToken = account.authentication.idToken;
 
       if (idToken == null || idToken.isEmpty) {
-        throw Exception('Google не вернул ID token');
+        throw Exception(
+          context.tr(
+            'Google не вернул ID token',
+            en: 'Google did not return an ID token',
+          ),
+        );
       }
 
       final response = await _authService.loginWithGoogle(idToken);
@@ -143,14 +156,24 @@ class _LoginScreenState extends State<LoginScreen>
 
     final webClientId = ApiConstants.googleWebClientId;
     if (webClientId.isEmpty) {
-      throw Exception('GOOGLE_WEB_CLIENT_ID не задан в .env');
+      throw Exception(
+        context.tr(
+          'GOOGLE_WEB_CLIENT_ID не задан в .env',
+          en: 'GOOGLE_WEB_CLIENT_ID is missing in .env',
+        ),
+      );
     }
 
     String? clientId;
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       final iosClientId = ApiConstants.googleIosClientId;
       if (iosClientId.isEmpty) {
-        throw Exception('GOOGLE_IOS_CLIENT_ID не задан в .env');
+        throw Exception(
+          context.tr(
+            'GOOGLE_IOS_CLIENT_ID не задан в .env',
+            en: 'GOOGLE_IOS_CLIENT_ID is missing in .env',
+          ),
+        );
       }
       clientId = iosClientId;
     }
@@ -169,7 +192,14 @@ class _LoginScreenState extends State<LoginScreen>
     final email = response['email']?.toString() ?? '';
     final isNewUser = response['isNewUser'] == true;
 
-    if (token.isEmpty) throw Exception('Токен не получен от сервера');
+    if (token.isEmpty) {
+      throw Exception(
+        context.tr(
+          'Токен не получен от сервера',
+          en: 'Token was not received from the server',
+        ),
+      );
+    }
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
@@ -185,7 +215,11 @@ class _LoginScreenState extends State<LoginScreen>
           children: [
             const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 12),
-            Text('С возвращением, $usernameFromServer!'),
+            Text(
+              context.appLanguage.isEnglish
+                  ? 'Welcome back, $usernameFromServer!'
+                  : 'С возвращением, $usernameFromServer!',
+            ),
           ],
         ),
         backgroundColor: Colors.green.shade600,
@@ -228,6 +262,312 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  void _showForgotPasswordDialog() {
+    final palette = context.palette;
+    final emailController = TextEditingController(
+      text: _usernameController.text.contains('@')
+          ? _usernameController.text.trim()
+          : '',
+    );
+    final codeController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    bool codeSent = false;
+    bool isSubmitting = false;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          Future<void> sendCode() async {
+            final email = emailController.text.trim();
+            if (email.isEmpty || !email.contains('@')) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(context.tr('Введите корректный email')),
+                  backgroundColor: Colors.red.shade600,
+                ),
+              );
+              return;
+            }
+
+            setDialogState(() => isSubmitting = true);
+            try {
+              await _authService.requestPasswordReset(email);
+              if (!context.mounted) return;
+              setDialogState(() {
+                codeSent = true;
+                isSubmitting = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(context.tr('Если email найден, код отправлен')),
+                  backgroundColor: Colors.green.shade600,
+                ),
+              );
+            } catch (e) {
+              if (!context.mounted) return;
+              setDialogState(() => isSubmitting = false);
+              _showAuthError(e);
+            }
+          }
+
+          Future<void> resetPassword() async {
+            final email = emailController.text.trim();
+            final code = codeController.text.trim();
+            final newPassword = newPasswordController.text;
+            final confirmPassword = confirmPasswordController.text;
+
+            if (code.isEmpty ||
+                newPassword.isEmpty ||
+                confirmPassword.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(context.tr('Все поля должны быть заполнены')),
+                  backgroundColor: Colors.red.shade600,
+                ),
+              );
+              return;
+            }
+            if (newPassword.length < 8) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    context.tr('Пароль должен содержать минимум 8 символов'),
+                  ),
+                  backgroundColor: Colors.red.shade600,
+                ),
+              );
+              return;
+            }
+            if (newPassword != confirmPassword) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(context.tr('Пароли не совпадают')),
+                  backgroundColor: Colors.red.shade600,
+                ),
+              );
+              return;
+            }
+
+            setDialogState(() => isSubmitting = true);
+            try {
+              await _authService.confirmPasswordReset(email, code, newPassword);
+              if (!context.mounted) return;
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    context.tr('Пароль изменён. Теперь можно войти'),
+                  ),
+                  backgroundColor: Colors.green.shade600,
+                ),
+              );
+            } catch (e) {
+              if (!context.mounted) return;
+              setDialogState(() => isSubmitting = false);
+              _showAuthError(e);
+            }
+          }
+
+          return AlertDialog(
+            backgroundColor: palette.elevated,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text(
+              codeSent
+                  ? context.tr('Введите код')
+                  : context.tr('Восстановить пароль'),
+              style: TextStyle(
+                color: palette.text,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: emailController,
+                    enabled: !codeSent && !isSubmitting,
+                    keyboardType: TextInputType.emailAddress,
+                    style: TextStyle(color: palette.text),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      labelStyle: TextStyle(color: palette.mutedText),
+                      prefixIcon: Icon(
+                        Icons.mail_outline,
+                        color: palette.accent,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: palette.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: palette.accent, width: 2),
+                      ),
+                    ),
+                  ),
+                  if (codeSent) ...[
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: codeController,
+                      enabled: !isSubmitting,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      style: TextStyle(color: palette.text),
+                      decoration: InputDecoration(
+                        labelText: context.tr('Код из письма'),
+                        counterText: '',
+                        labelStyle: TextStyle(color: palette.mutedText),
+                        prefixIcon: Icon(
+                          Icons.pin_outlined,
+                          color: palette.accent,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: palette.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: palette.accent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: newPasswordController,
+                      enabled: !isSubmitting,
+                      obscureText: obscureNew,
+                      style: TextStyle(color: palette.text),
+                      decoration: InputDecoration(
+                        labelText: context.tr('Новый пароль'),
+                        labelStyle: TextStyle(color: palette.mutedText),
+                        helperText: context.tr('Минимум 8 символов'),
+                        helperStyle: TextStyle(color: palette.mutedText),
+                        prefixIcon: Icon(
+                          Icons.lock_outline,
+                          color: palette.accent,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureNew
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: palette.accent,
+                          ),
+                          onPressed: () =>
+                              setDialogState(() => obscureNew = !obscureNew),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: palette.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: palette.accent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: confirmPasswordController,
+                      enabled: !isSubmitting,
+                      obscureText: obscureConfirm,
+                      style: TextStyle(color: palette.text),
+                      decoration: InputDecoration(
+                        labelText: context.tr('Повторите пароль'),
+                        labelStyle: TextStyle(color: palette.mutedText),
+                        prefixIcon: Icon(
+                          Icons.lock_reset_outlined,
+                          color: palette.accent,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureConfirm
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: palette.accent,
+                          ),
+                          onPressed: () => setDialogState(
+                            () => obscureConfirm = !obscureConfirm,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: palette.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: palette.accent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSubmitting ? null : () => Navigator.pop(context),
+                child: Text(
+                  context.tr('Отмена'),
+                  style: TextStyle(color: palette.mutedText),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: isSubmitting
+                    ? null
+                    : codeSent
+                    ? resetPassword
+                    : sendCode,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: palette.accent,
+                  foregroundColor: palette.onAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: isSubmitting
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        codeSent
+                            ? context.tr('Изменить пароль')
+                            : context.tr('Отправить код'),
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    ).whenComplete(() {
+      emailController.dispose();
+      codeController.dispose();
+      newPasswordController.dispose();
+      confirmPasswordController.dispose();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
@@ -241,10 +581,20 @@ class _LoginScreenState extends State<LoginScreen>
               Positioned(
                 top: 8,
                 right: 12,
-                child: IconButton(
-                  tooltip: 'Тема приложения',
-                  onPressed: () => showAppThemeSheet(context),
-                  icon: Icon(Icons.palette_rounded, color: palette.accent),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: context.tr('Тема приложения'),
+                      onPressed: () => showAppThemeSheet(context),
+                      icon: Icon(Icons.palette_rounded, color: palette.accent),
+                    ),
+                    IconButton(
+                      tooltip: context.tr('Язык интерфейса'),
+                      onPressed: () => showAppLanguageSheet(context),
+                      icon: Icon(Icons.language_rounded, color: palette.accent),
+                    ),
+                  ],
                 ),
               ),
               Center(
@@ -317,7 +667,7 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 8),
 
                           Text(
-                            'Войдите, чтобы продолжить чтение',
+                            context.tr('Войдите, чтобы продолжить чтение'),
                             style: TextStyle(
                               fontSize: 16,
                               color: palette.mutedText,
@@ -330,12 +680,14 @@ class _LoginScreenState extends State<LoginScreen>
                           // Username field
                           _buildGlassTextField(
                             controller: _usernameController,
-                            label: 'Email или логин',
+                            label: context.tr('Email или логин'),
                             hint: 'example@mail.com',
                             icon: Icons.person_outline,
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Введите email или имя пользователя';
+                                return context.tr(
+                                  'Введите email или имя пользователя',
+                                );
                               }
                               return null;
                             },
@@ -346,7 +698,7 @@ class _LoginScreenState extends State<LoginScreen>
                           // Password field
                           _buildGlassTextField(
                             controller: _passwordController,
-                            label: 'Пароль',
+                            label: context.tr('Пароль'),
                             hint: '••••••••',
                             icon: Icons.lock_outline,
                             obscureText: _obscurePassword,
@@ -363,13 +715,31 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Введите пароль';
+                                return context.tr('Введите пароль');
                               }
                               return null;
                             },
                           ),
 
-                          const SizedBox(height: 40),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: _isAuthBusy
+                                  ? null
+                                  : _showForgotPasswordDialog,
+                              icon: Icon(
+                                Icons.lock_reset_rounded,
+                                size: 18,
+                                color: palette.accent,
+                              ),
+                              label: Text(
+                                context.tr('Забыли пароль?'),
+                                style: TextStyle(color: palette.accent),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
 
                           // Login button
                           Container(
@@ -404,8 +774,8 @@ class _LoginScreenState extends State<LoginScreen>
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text(
-                                      'Войти',
+                                  : Text(
+                                      context.tr('Войти'),
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
@@ -434,14 +804,14 @@ class _LoginScreenState extends State<LoginScreen>
                             },
                             child: RichText(
                               text: TextSpan(
-                                text: 'Нет аккаунта? ',
+                                text: context.tr('Нет аккаунта? '),
                                 style: TextStyle(
                                   color: palette.mutedText,
                                   fontSize: 15,
                                 ),
                                 children: [
                                   TextSpan(
-                                    text: 'Зарегистрироваться',
+                                    text: context.tr('Зарегистрироваться'),
                                     style: TextStyle(
                                       color: palette.accent,
                                       fontWeight: FontWeight.w600,
@@ -498,7 +868,7 @@ class _LoginScreenState extends State<LoginScreen>
                   const SizedBox(width: 12),
                   Flexible(
                     child: Text(
-                      'Войти через Google',
+                      context.tr('Войти через Google'),
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 16,
