@@ -110,30 +110,28 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _loginWithGoogle() async {
+    final googleUnavailableMessage = context.tr(
+      'Google вход недоступен на этой платформе',
+      en: 'Google sign-in is not available on this platform',
+    );
+    final missingIdTokenMessage = context.tr(
+      'Google не вернул ID token',
+      en: 'Google did not return an ID token',
+    );
     setState(() => _isGoogleLoading = true);
 
     try {
       await _ensureGoogleSignInInitialized();
 
       if (!GoogleSignIn.instance.supportsAuthenticate()) {
-        throw Exception(
-          context.tr(
-            'Google вход недоступен на этой платформе',
-            en: 'Google sign-in is not available on this platform',
-          ),
-        );
+        throw Exception(googleUnavailableMessage);
       }
 
       final account = await GoogleSignIn.instance.authenticate();
       final idToken = account.authentication.idToken;
 
       if (idToken == null || idToken.isEmpty) {
-        throw Exception(
-          context.tr(
-            'Google не вернул ID token',
-            en: 'Google did not return an ID token',
-          ),
-        );
+        throw Exception(missingIdTokenMessage);
       }
 
       final response = await _authService.loginWithGoogle(idToken);

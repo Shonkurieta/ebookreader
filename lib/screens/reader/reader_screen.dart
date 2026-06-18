@@ -336,6 +336,7 @@ class _ReaderScreenState extends State<ReaderScreen>
         highlightedText: content.substring(selection.start, selection.end),
         color: _colorToHex(_readerHighlightColor),
       );
+      if (!mounted) return;
       setState(() {
         _annotations = [..._annotations, annotation]
           ..sort((a, b) => a.startOffset.compareTo(b.startOffset));
@@ -346,6 +347,7 @@ class _ReaderScreenState extends State<ReaderScreen>
         await _showNoteEditor(annotation);
       }
     } catch (e) {
+      if (!mounted) return;
       _showError('${context.tr('Ошибка сохранения выделения')}: $e');
     }
   }
@@ -569,6 +571,7 @@ class _ReaderScreenState extends State<ReaderScreen>
             .toList();
       });
     } catch (e) {
+      if (!mounted) return;
       _showError('${context.tr('Ошибка обновления заметки')}: $e');
     }
   }
@@ -580,12 +583,14 @@ class _ReaderScreenState extends State<ReaderScreen>
         widget.bookId,
         annotation.id,
       );
+      if (!mounted) return;
       setState(() {
         _annotations = _annotations
             .where((item) => item.id != annotation.id)
             .toList();
       });
     } catch (e) {
+      if (!mounted) return;
       _showError('${context.tr('Ошибка удаления заметки')}: $e');
     }
   }
@@ -609,6 +614,7 @@ class _ReaderScreenState extends State<ReaderScreen>
         widget.bookId,
       );
     } catch (e) {
+      if (!mounted) return;
       _showError('${context.tr('Ошибка загрузки заметок')}: $e');
       return;
     }

@@ -89,28 +89,28 @@ class _ProfileScreenState extends State<ProfileScreen>
     final palette = context.palette;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: palette.elevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          context.tr('Выход из системы'),
+          dialogContext.tr('Выход из системы'),
           style: TextStyle(color: palette.text, fontWeight: FontWeight.bold),
         ),
         content: Text(
-          context.tr('Вы действительно хотите выйти из своего аккаунта?'),
+          dialogContext.tr('Вы действительно хотите выйти из своего аккаунта?'),
           style: TextStyle(color: palette.text.withValues(alpha: 0.8)),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              context.tr('Отмена'),
+              dialogContext.tr('Отмена'),
               style: TextStyle(color: palette.mutedText),
             ),
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               await _storage.clearToken();
               if (!mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
@@ -125,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
             child: Text(
-              context.tr('Выйти'),
+              dialogContext.tr('Выйти'),
               style: const TextStyle(color: Colors.white),
             ),
           ),

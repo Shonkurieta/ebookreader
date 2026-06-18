@@ -59,6 +59,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final missingTokenMessage = context.tr('Токен не получен от сервера');
     setState(() => _isLoading = true);
 
     try {
@@ -71,8 +72,9 @@ class _RegisterScreenState extends State<RegisterScreen>
       final token = response['token']?.toString() ?? '';
       final role = response['role']?.toString() ?? 'USER';
 
-      if (token.isEmpty)
-        throw Exception(context.tr('Токен не получен от сервера'));
+      if (token.isEmpty) {
+        throw Exception(missingTokenMessage);
+      }
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
