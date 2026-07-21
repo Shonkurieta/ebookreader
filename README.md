@@ -66,35 +66,6 @@ This diploma project is a joint app created with my partner over several months;
 - Uses PostgreSQL for data storage.
 - Docker support is included for local backend environment setup.
 
-## Project status
-
-- Work began as a team project and continued across a few months.
-- I’m not in a rush to add everything immediately. Today is **April 15th**, and the diploma defense is scheduled for **June 22nd-28th.**
-
-## Future direction (as of April 15th)
-
-This project is headed toward becoming a true book superapp.
-The priorities are:
-
-1. **AI Recommendation Engine** -- done by May 16th
-   - Add an AI recommendation engine that suggests books based on reading history
-   - If a user has no history yet, ask them about books they love or let AI ask a few warm-up questions
-   - Add an AI button on the main page to recommend titles dynamically
-
-2. **Reading experience** -- done by May 21st
-   - Bookmarks inside books
-   - Notes/highlights
-   - Highlight words and get definitions
-   - Translate words or passages from open-source dictionaries
-
-3. **Audiobooks and sync** -- done by May 21st
-   - Support audiobooks and ebook playback together
-   - Sync audio position with text so users can listen while walking and continue reading at home
-
-4. **Reviews, ratings, and quotes last** -- in progress
-   - Add book reviews and rating pages
-   - Add quotes in the far future once core reading and AI functionality are strong
-
 ## Tech stack
 
 - Flutter frontend
@@ -111,8 +82,7 @@ The priorities are:
 
 - Project started with a partner, developed together for 2 months (October and February).
 - Partner, that absolutely deserves a lot of credit - [Shonkurieta](https://github.com/Shonkurieta). Frontend developer of this project and also added the EPUB support.
-- Now continuing as a solo developer. Also have an internship, part-time job, and I'm training for a half-marathon.
-- Main focus: achieve the first 3 of 4 goals at least, which should suffice for a great grade (no pun intended), or even achieve all 4 if I manage my time the best way possible. Though it all depends on how hard Machine Learning is, and I currently have zero idea due to having zero past experience.
+- Project finished as a solo developer, defended it as my diploma project and graduated with honors.
 
 
 ---
